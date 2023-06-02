@@ -20,12 +20,12 @@ class UserController extends Controller
     public function index()
     {
         if(\Auth::user()->can('Manage User')){
-         
-          
-          
             $users = User::where('created_by','=',\Auth::user()->creatorId())->where('current_store',\Auth::user()->current_store)->get();
             return view('users.index',compact('users'));
             
+        } else if(\Auth::user()->can('Manage Admin Staff')) {
+            $users = User::where('created_by','=',\Auth::user()->creatorId())->where('current_store',0)->get();
+            return view('users.index',compact('users'));
         }
         else{
             return redirect()->back()->with('error', __('Permission denied.'));
@@ -43,7 +43,11 @@ class UserController extends Controller
             $user  = \Auth::user();
             $roles = Role::where('created_by', '=', $user->creatorId())->where('store_id',$user->current_store)->get()->pluck('name', 'id');
             return view('users.create',compact('roles'));
-        }else {
+        } else if(\Auth::user()->can('Create Admin Staff')) {
+            $user  = \Auth::user();
+            $roles = Role::where('created_by', '=', $user->creatorId())->where('store_id', 0)->get()->pluck('name', 'id');
+            return view('users.create',compact('roles'));
+        } else {
             return response()->json(['error' => __('Permission denied.')], 401);
         }
     }
@@ -56,7 +60,43 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        if (\Auth::user()->can('Create User')) {
+        if(\Auth::user()->can('Create Admin Staff')) {
+            $validator = \Validator::make(
+                $request->all(),
+                [
+                    'name' => 'required',
+                    'email' => ['required',
+                    Rule::unique('users')->where(function ($query) {
+                        return $query->where('created_by', \Auth::user()->id)->where('current_store',0);
+                    })
+                    ],
+                ]
+            );
+            if ($validator->fails()) {
+                $messages = $validator->getMessageBag();
+                return redirect()->back()->with('error', $messages->first());
+            }
+            $default_language = DB::table('settings')->select('value')->where('name', 'default_language')->first();
+            
+            $role_r = Role::findById($request->role);
+            $date = date("Y-m-d H:i:s");
+
+            $user =  new User();
+            $user->name =  $request['name'];
+            $user->email =  $request['email'];
+            $user->password = Hash::make($request['password']);
+            $user->type = \Auth::user()->type;
+            $user->lang = $default_language->value ?? 'en';
+            $user->created_by = \Auth::user()->creatorId();
+            $user->email_verified_at = $date;
+            $user->current_store = 0;
+            $user->plan = \Auth::user()->plan;
+            $user->save();
+
+            $user->assignRole($role_r);
+            return redirect()->route('users.index')->with('success', __('User successfully created.'));
+
+        } else if (\Auth::user()->can('Create User')) {
             $validator = \Validator::make(
                 $request->all(),
                 [
@@ -129,6 +169,10 @@ class UserController extends Controller
             $user  = User::find($id);
             $roles = Role::where('created_by', '=', \Auth::user()->creatorId())->where('store_id',\Auth::user()->current_store)->get()->pluck('name', 'id');
             return view('users.edit', compact('user', 'roles'));
+        } else if(\Auth::user()->can('Create Admin Staff')) {
+            $user  = User::find($id);
+            $roles = Role::where('created_by', '=', \Auth::user()->creatorId())->where('store_id', 0)->get()->pluck('name', 'id');
+            return view('users.edit', compact('user', 'roles'));
         } else {
             return response()->json(['error' => __('Permission denied.')], 401);
         }
@@ -141,19 +185,53 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id, User $user)
+    public function update(Request $request, User $user)
     {
-        if (\Auth::user()->can('Edit User')) {
+        $id = $user->id;
+        if(\Auth::user()->can('Edit Admin Staff')) {
             $validator = \Validator::make(
                 $request->all(),
-                [
-                    'name' => 'required',
-                    'email' => ['required|unique:users,email,' . $id,
-                        Rule::unique('users')->where(function ($query)  use ($user) {
-                            return $query->whereNotIn('id',[$user->id])->where('created_by',  \Auth::user()->creatorId())->where('current_store', \Auth::user()->current_store);
-                        })
-                    ],
-                ]
+                    [
+                        'name' => 'required',
+                        'email' => [
+                            'required',
+                            Rule::unique('users')->ignore($id)->where(function ($query) use ($user) {
+                                return $query->whereNotIn('id', [$user->id])
+                                    ->where('created_by', \Auth::user()->creatorId())
+                                    ->where('current_store', 0);
+                            }),
+                        ],
+                    ]
+            );
+
+            if ($validator->fails()) {
+                $messages = $validator->getMessageBag();
+                return redirect()->back()->with('error', $messages->first());
+            }
+
+            $user = User::findOrFail($id);
+            $role          = Role::findById($request->role);
+            $input         = $request->all();
+            $user->fill($input)->save();
+            $user->assignRole($role);
+            $roles[] = $request->role;
+            $user->roles()->sync($roles);
+            return redirect()->route('users.index')->with('success', 'User successfully updated.');
+
+        } else if (\Auth::user()->can('Edit User')) {
+             $validator = \Validator::make(
+                $request->all(),
+                    [
+                        'name' => 'required',
+                        'email' => [
+                            'required',
+                            Rule::unique('users')->ignore($id)->where(function ($query) use ($user) {
+                                return $query->whereNotIn('id', [$user->id])
+                                    ->where('created_by', \Auth::user()->creatorId())
+                                    ->where('current_store', \Auth::user()->current_store);
+                            }),
+                        ],
+                    ]
             );
             if ($validator->fails()) {
                 $messages = $validator->getMessageBag();
@@ -185,7 +263,7 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        if (\Auth::user()->can('Delete User')) {
+        if (\Auth::user()->can('Delete User') || \Auth::user()->can('Delete Admin Staff')) {
             $user = User::findOrFail($id);
             $user->delete();
 

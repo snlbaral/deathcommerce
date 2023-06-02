@@ -53,6 +53,9 @@
     <link rel="stylesheet" href="{{asset('assets/css/customizer.css')}}">
 
     <link rel="stylesheet" href="{{asset('landing/css/landing.css')}}" />
+    @foreach ($pixelScript as $script)
+        <?= $script; ?>
+    @endforeach
   </head>
 
   <body class="{{ $color }}">

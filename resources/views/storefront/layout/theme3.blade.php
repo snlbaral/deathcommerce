@@ -251,9 +251,9 @@
                             </div>
                         </li>
                     @else
-                        <li class="profile-header-2 set has-children has-item">
+                        <li class="profile-header-2 set has-children">
                             <a href="{{ route('customer.login', $store->slug) }}"
-                                class="acnav-label">{{ __('Log in') }}</a>
+                                class="">{{ __('Log in') }}</a>
                         </li>
                     @endif
                     
@@ -297,6 +297,7 @@
     <footer class="site-footer">
         <div class="container">
             @if ($getStoreThemeSetting[5]['section_enable'] == 'on')
+            
                 <div class="footer-row">
                     <div class="footer-logo">
                         <a href="{{ route('store.slug', $store->slug) }}">
@@ -408,7 +409,17 @@
                             </div>
                         @endif
                     </div>
-
+                    <div class="image-bottom" style="position: relative; margin-top: 8px;">
+                        <div class="d-flex align-items-center">
+                            @php
+                                $logo = \App\Models\Utility::get_file('uploads/logo/');
+                                $company_logo = \App\Models\Utility::GetLogo();
+                            @endphp
+                            <div class="text-secondary" style="margin-right:8px">Powered By</div>
+                            <img src="{{ $logo . '/' . (isset($company_logo) && !empty($company_logo) ? $company_logo : 'logo-dark.png') }}" alt="{{ config('app.name', 'Storego') }}" class="logo logo-lg" height="20px" />
+                        </div>
+                    </div>
+                    
                 </div>
             @endif
             @if (isset($getStoreThemeSetting[14]['section_enable']) && $getStoreThemeSetting[14]['section_enable'] == 'on')
@@ -619,6 +630,7 @@
                 },
                 success: function(response) {
                     if (response.status == "Success") {
+                        $("header").after(response.modal)
                         show_toastr('Success', response.success, 'success');
                         $("#shoping_counts").html(response.item_count);
                     } else {
@@ -747,6 +759,10 @@
     <noscript><img height="1" width="1" style="display:none"
             src="https://www.facebook.com/tr?id=0000&ev=PageView&noscript={{ $store_settings->fbpixel_code }}" /></noscript>
 
+            @if($store_settings['enable_whatsapp_button'])
+    <a class="bg-primary" style="position: fixed;bottom: 20px;right: 20px;z-index: 9999;border-radius: 50%;padding: 12px;" href="{{$store_settings['whatsapp_link']}}" target="_blank">
+  <img src="{{ asset('assets/images/whatsapp-48.png') }}" alt="WhatsApp Icon" width="28" height="28"></a>
+@endif
 </body>
 
 </html>

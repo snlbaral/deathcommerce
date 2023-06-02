@@ -1,6 +1,10 @@
 @extends('layouts.admin')
 @section('page-title')
-    {{ __('Product') }}
+    @if(\Auth::user()->can('Manage Admin Staff'))
+        {{ __('Admin Staff') }}
+    @else
+        {{ __('Product') }}
+    @endif
 @endsection
 @php
 $profile=\App\Models\Utility::get_file('uploads/profile/');
@@ -15,11 +19,11 @@ $profile=\App\Models\Utility::get_file('uploads/profile/');
     <li class="breadcrumb-item active" aria-current="page">{{ __('Users') }}</li>
 @endsection
 @section('action-btn')
-@can('Create User')
+@canany(['Create User','Create Admin Staff'])
     <a class="btn btn-sm btn-icon  btn-primary me-2" data-url="{{ route('users.create') }}" data-title="{{ __('Add User') }}" data-ajax-popup="true" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ __('Create') }}">
         <i  data-feather="plus"></i>
     </a>
-@endcan
+@endcanany
 @endsection
 @section('filter')
 @endsection
@@ -37,26 +41,26 @@ $logo=\App\Models\Utility::get_file('uploads/profile/');
                                 <div class="badge p-2 px-3 rounded bg-primary">{{ ucfirst($user->type) }}</div>
                             </h6>
                         </div>
-                        @if (Gate::check('Edit User') || Gate::check('Delete User'))
+                        @if (Gate::check('Edit User') || Gate::check('Delete User') || Gate::check('Edit Admin Staff') || Gate::check('Delete Admin Staff'))
                             <div class="card-header-right">
                                 <div class="btn-group card-option">
                                     <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         <i class="feather icon-more-vertical"></i>
                                     </button>
                                 <div class="dropdown-menu dropdown-menu-end">
-                                    @can('Edit User')
+                                    @canany(['Edit User','Edit Admin Staff'])
                                         <a href="#" class="dropdown-item" data-url="{{ route('users.edit', $user->id) }}" data-size="md" data-ajax-popup="true" data-title="{{ __('Update User') }}">
                                             <i class="ti ti-edit"></i>
                                             <span class="ms-2">{{ __('Edit') }}</span>
                                         </a>
-                                    @endcan
+                                    @endcanany
                                     @can('Reset Password')
                                         <a href="#" class="dropdown-item" data-url="{{ route('users.reset', \Crypt::encrypt($user->id)) }}" data-ajax-popup="true" data-size="md" data-title="{{ __('Change Password') }}">
                                             <i class="ti ti-key"></i>
                                             <span class="ms-2">{{ __('Reset Password') }}</span>
                                         </a>
                                     @endcan
-                                    @can('Delete User')
+                                    @canany(['Delete User','Delete Admin Staff'])
                                         {!! Form::open(['method' => 'DELETE', 'route' => ['users.destroy', $user->id], 'id' => 'delete-form-' . $user->id]) !!}
                                         <a href="#" class="bs-pass-para dropdown-item"
                                             data-confirm="{{ __('Are You Sure?') }}"
@@ -66,7 +70,7 @@ $logo=\App\Models\Utility::get_file('uploads/profile/');
                                             data-bs-placement="top"><i class="ti ti-trash"></i><span
                                                 class="ms-2">{{ __('Delete') }}</span></a>
                                         {!! Form::close() !!}
-                                    @endcan
+                                    @endcanany
                                 </div>
                                 </div>
                             </div>
@@ -85,7 +89,7 @@ $logo=\App\Models\Utility::get_file('uploads/profile/');
             </div>
         @endforeach
         <div class="col-md-3">
-            @can('Create User')
+            @canany(['Create User','Create Admin Staff'])
                 <a class="btn-addnew-project" data-url="{{ route('users.create') }}" data-title="{{ __('Add User') }}" data-ajax-popup="true" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ __('Create') }}"><i class="ti ti-plus text-white"></i>
                     <div class="bg-primary proj-add-icon">
                         <i class="ti ti-plus"></i>
@@ -93,7 +97,7 @@ $logo=\App\Models\Utility::get_file('uploads/profile/');
                     <h6 class="mt-4 mb-2">{{ __('New User') }}</h6>
                     <p class="text-muted text-center">{{ __('Click here to add New User') }}</p>
                 </a>
-            @endcan
+            @endcanany
         </div>
     </div>
 

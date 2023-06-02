@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\PlanOrder;
+use App\Models\PlanPrice;
+use App\Models\User;
 
 class Plan extends Model
 {
@@ -21,6 +24,8 @@ class Plan extends Model
         'image',
         'description',
         'pwa_store',
+        'trial_days',
+        'status',
     ];
 
     public static $arrDuration = [
@@ -36,6 +41,25 @@ class Plan extends Model
             __('Per Month'),
             __('Per Year'),
         ];
+    }
+
+    public function defaultMonthlyPrice() {
+        $planPrice = PlanPrice::where('plan_id','=',$this->id)->where('country','=','Default')->first();
+        if($planPrice) {
+            return $planPrice->monthly;
+        }
+        return 0;
+    }
+    public function defaultYearlyPrice() {
+        $planPrice = PlanPrice::where('plan_id','=',$this->id)->where('country','=','Default')->first();
+        if($planPrice) {
+            return $planPrice->yearly;
+        }
+        return 0;
+    }
+
+    public function getPlanStatus() {
+        return $this->status === 0 ? "Inactive" : "Active";
     }
 
     public static function total_plan()
@@ -57,5 +81,14 @@ class Plan extends Model
             __('Per Year'),
             __('Year'),
         ];
+    }
+
+    public function get_plan_orders_count()
+    {
+        return PlanOrder::where('plan_id', $this->id)->count();
+    }
+    public function get_plan_users_count()
+    {
+        return User::where('plan', $this->id)->count();
     }
 }

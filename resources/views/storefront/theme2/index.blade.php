@@ -497,6 +497,7 @@ $s_logo = \App\Models\Utility::get_file('uploads/store_logo/');
                 },
                 success: function(response) {
                     if (response.status == "Success") {
+                        $("header").after(response.modal)
                         show_toastr('Success', response.success, 'success');
                         $("#shoping_counts").html(response.item_count);
                     } else {

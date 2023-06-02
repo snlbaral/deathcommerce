@@ -95,6 +95,11 @@
                     role="tab" aria-controls="pills-cookie_settings-tab"
                     aria-selected="false">{{ __('Cookie Settings') }}</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" id="pills-pixel_setting-tab" data-bs-toggle="pill" href="#pixel_settings"
+                    role="tab" aria-controls="pixel_settings"
+                    aria-selected="false">{{ __('Pixel Settings') }}</a>
+            </li>
         @else
             <li class="nav-item">
                 <a class="nav-link active" id="pills-brand_setting-tab" data-bs-toggle="pill" href="#pills-brand-setting"
@@ -1956,6 +1961,67 @@
                             </div>
                         </div>
                     </div>
+                    <div class="tab-pane fade" id="pixel_settings" role="tabpanel" aria-labelledby="pills-pixel_setting-tab">
+                        <div class="card">
+                            <div class="custom-fields">
+                                <div class="card-header d-flex align-items-center justify-content-between">
+                                    <div class="">
+                                        <h5 class="">{{ __('Pixel Fields Settings') }}</h5>
+                                        <small>{{ __('Enter Your Pixel Fields Settings') }}</small>
+                                    </div>
+                                    {{--  <a data-repeater-create 
+                                        class="btn btn-sm btn-icon  btn-primary me-2"
+                                        data-bs-toggle="tooltip" data-bs-placement="top"
+                                        title="{{ __('Create Custom Field') }}">
+                                        <i  data-feather="plus"></i>
+                                    </a>  --}}
+                                    <a href="#" class="btn btn-sm btn-icon  btn-primary me-2" data-ajax-popup="true" data-url="{{ route('owner.pixel.create') }}" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ __('Create') }}" data-title="{{ __('Create New Pixel') }}">
+                                        <i  data-feather="plus"></i>
+                                    </a>
+                                </div>
+                                <div class="card-body table-border-style">
+                                    <div class="datatable-container">
+                                    
+                                        <div class="table-responsive custom-field-table">
+                                            
+                                            <table class="table dataTable-table" id="pc-dt-simple" data-repeater-list="fields">
+                                                <thead class="thead-light">
+                                                    <tr>
+                                                        <th>{{ __('Platform') }}</th>
+                                                        <th>{{ __('Pixel Id') }}</th>
+                    
+                                                        <th class="text-right">{{ __('Action') }}</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($PixelFields as  $PixelField)
+                                                        <tr>
+                                                            <td class="text-capitalize"> 
+                                                                {{ $PixelField->platform }}
+                                                            </td>
+                                                            <td>
+                                                                {{ $PixelField->pixel_id }}
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <div class="d-flex">
+                                                                    <a class="bs-pass-para btn btn-sm btn-icon bg-light-secondary" href="#" data-title="{{ __('Delete pixel') }}" data-confirm="{{ __('Are You Sure?') }}" data-text="{{ __('This action can not be undone. Do you want to continue?') }}" data-confirm-yes="pixel-delete-form-{{ $PixelField->id }}" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ __('Delete') }}">
+                                                                        <i class="ti ti-trash f-20"></i>
+                                                                    </a>
+                                                                    {!! Form::open(['method' => 'DELETE', 'route' => ['pixel.delete', $PixelField->id], 'id' => 'pixel-delete-form-' . $PixelField->id]) !!}
+                                                                    {!! Form::close() !!}
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
             @else
                 <div class="tab-content" id="pills-tabContent">
                     <div class="tab-pane fade active show" id="pills-brand-setting" role="tabpanel"
@@ -2595,6 +2661,26 @@
                                                     </div>
                                                 </div>
 
+                                                <div class="col-md-12">
+                                                    <div class="row">
+                                                        <div class="form-group col-md-6">
+                                                            <label class="form-check-label" for="enable_whatsapp_button"></label>
+                                                            <div class="custom-control form-switch">
+                                                                <input type="hidden" name="enable_whatsapp_button" value="off" />
+                                                                <input type="checkbox" class="form-check-input"
+                                                                    name="enable_whatsapp_button" id="enable_whatsapp_button"
+                                                                    {{ $store_settings['enable_whatsapp_button'] == 1 ? 'checked=checked' : '' }}>
+                                                                {{ Form::label('enable_whatsapp_button', __('Whatsapp floating button'), ['class' => 'form-check-label mb-3']) }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-12 {{$store_settings['enable_whatsapp_button'] == 1 ? '' : 'd-none'}}" id="whatsapp_link">
+                                                    <div class="form-group">
+                                                        {{ Form::text('whatsapp_link', !empty($store_settings['whatsapp_link']) ? $store_settings['whatsapp_link'] : '', ['class' => 'form-control', 'placeholder' => __('Enter Whatsapp Link')]) }}
+                                                    </div>
+                                                </div>
+
                                                 <div class="col-md-6">
                                                     <div class="form-group">
                                                         <i class="fab fa-google" aria-hidden="true"></i>
@@ -2810,7 +2896,28 @@
                                                                             for="customRadio8">{{ __('Without Space') }}</label>
                                                                     </div>
                                                                 </div>
+                                                                
                                                             </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-12">
+                                                        <div class="row">
+                                                            <div class="col-6 py-2 text-end">
+                                                                <div class="form-check form-switch form-switch-right mb-2">
+                                                                   <input type="hidden" name="enable_minimum"
+                                                                        value="off">
+                                                                    <input type="checkbox" class="form-check-input mx-2" style="float: left"
+                                                                        name="enable_minimum"  id="enable_minimum"
+                                                                        {{ $store_settings['enable_minimum'] == 1 ? 'checked="checked"' : '' }}>
+                                                                    <label class="form-check-label text-start d-block"
+                                                                        for="enable_minimum">{{ __('Minimum Order') }}</label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6 {{$store_settings['enable_minimum'] == 1 ? '' : 'd-none'}}" id="minimum_order">
+                                                        <div class="form-group">
+                                                            {{ Form::number('minimum_order', !empty($store_settings['minimum_order']) ? $store_settings['minimum_order'] : '', ['class' => 'form-control', 'placeholder' => __('Enter Minimum Order')]) }}
                                                         </div>
                                                     </div>
                                                     <div class="col-md-12">
@@ -4404,6 +4511,20 @@
     <script src="{{ asset('custom/libs/jquery-mask-plugin/dist/jquery.mask.min.js') }}"></script>
 
     <script>
+        $("#enable_minimum").on('change', function(e) {
+            if(e.target.checked) {
+                $("#minimum_order").removeClass("d-none")
+            } else {
+                $("#minimum_order").addClass("d-none")
+            }
+        })
+        $("#enable_whatsapp_button").on('change', function(e) {
+            if(e.target.checked) {
+                $("#whatsapp_link").removeClass("d-none")
+            } else {
+                $("#whatsapp_link").addClass("d-none")
+            }
+        })
         function myFunction() {
             var copyText = document.getElementById("myInput");
             copyText.select();

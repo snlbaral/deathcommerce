@@ -18,7 +18,13 @@
         <div class="wrapper">
             <section class="padding-top padding-bottom cart-section">
                 <div class="container">
-                    <div class="row ">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="cart-title">
+                            <h2>{{__('My Cart')}}</h2>
+                        </div>
+                        <a href="{{route('store.slug',$store->slug)}}" class="star text-primary">{{__('Return to shop')}}</a>  
+                    </div> 
+                    {{-- <div class="row ">
                         <div class="col-lg-3 col-md-12 col-12">
                             <div class="cart-title">
                                 <h2> {{ __('My Cart') }}</h2>
@@ -32,9 +38,14 @@
                             </div>
                         </div>
 
-                    </div>
+                    </div> --}}
                     <div class="row">
                         <div class="col-12">
+                            @if($store_settings['enable_minimum'])
+                                <div id="minimum_alert" style="position: relative;padding: .75rem 1.25rem;margin-bottom: 1rem;margin-top:1rem;border: 1px solid transparent;border-radius: .25rem;color: #ff0000;background-color: #f5c6cb;border-color: #f5c6cb;font-weight:bold" role="alert">
+                                    You must have a minimum  order amount of {{\App\Models\Utility::priceFormat(!empty($store_settings['minimum_order'])?$store_settings['minimum_order']:0)}} to place your order. Your current order total is <span id="total_value">{{\App\Models\Utility::priceFormat(!empty($total)?$total:0)}}</span>.
+                                </div>
+                            @endif
                             <table class="cart-tble">
                                 <thead>
                                     <tr>
@@ -236,27 +247,21 @@
                     <div class="checkout-box">
                         <div class="row align-items-center">
                             <div class="col-md-8 col-12">
-                                @if (
-                                    $store_settings['is_checkout_login_required'] == null ||
-                                        ($store_settings['is_checkout_login_required'] == 'off' && !Auth::guard('customers')->user()))
-                                    {{-- <a href="#" class="checkout-btn modal-btn" data-toggle="modal"
-                                        data-target="#Checkout" id="Checkout">
-                                        {{ __('Proceed to checkout') }}
-                                        <i class="fas fa-shopping-basket"></i>
-                                    </a> --}}
-                                     <a href="javascript:void(0)" class="checkout-btn modal-target" data-modal="Checkout" id="checkout-btn">
-                                        Proceed to checkout
-                                        <i class="fas fa-shopping-basket"></i>
-                                    </a>
+                                @if($store_settings['enable_minimum'] && $total <= $store_settings['minimum_order'])
+                                    <button class="checkout-btn" style="opacity: 0.5;cursor:not-allowed" disabled>{{__('Proceed to checkout')}}<i class="fas fa-shopping-basket"></i></button>
                                 @else
-                                    <a href="{{ route('user-address.useraddress', $store->slug) }}" class="checkout-btn">
-                                        {{ __('Proceed to checkout') }}
-                                        <i class="fas fa-shopping-basket"></i>
-                                    </a>
+                                    @if($store_settings['is_checkout_login_required'] == null || $store_settings['is_checkout_login_required'] == 'off' && !Auth::guard('customers')->user())
+                                        <a href="#" class="checkout-btn modal-target" data-modal="Checkout" id="checkout-btn">
+                                            {{__('Proceed to checkout')}}
+                                            <i class="fas fa-shopping-basket"></i>
+                                        </a>
+                                    @else
+                                        <a href="{{route('user-address.useraddress',$store->slug)}}" class="checkout-btn">
+                                            {{__('Proceed to checkout')}}
+                                            <i class="fas fa-shopping-basket"></i>
+                                        </a>
+                                    @endif
                                 @endif
-
-                                <a href="{{ route('store.slug', $store->slug) }}"
-                                    class="cart-btn">{{ __('Return to shop') }}</a>
                             </div>
 
                             <div class="col-md-4 col-12">
@@ -1010,5 +1015,13 @@
         });
 
         // close
+
+        $("#total_value").text("{{\App\Models\Utility::priceFormat(!empty($total)?$total:0)}}")
+        var total = "{{$total ?? 0}}"
+        var minimum_order = "{{$store_settings['minimum_order']}}"
+        var enable_minimum = "{{$store_settings['enable_minimum']}}"
+        if(enable_minimum && Number(total)>Number(minimum_order)) {
+            $("#minimum_alert").remove()
+        }
     </script>
 @endpush

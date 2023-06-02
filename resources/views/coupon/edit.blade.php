@@ -1,3 +1,8 @@
+<style>
+    .select2-container {
+        z-index: 9999;
+    }
+</style>
 <form method="post" action="{{ route('coupons.update', $coupon->id) }}">
     @csrf
     @method('PUT')
@@ -27,6 +32,14 @@
 
             </div>
         </div>
+
+
+        <div class="form-group col-md-12">
+            {{ Form::label('plans', __('Plans'), array('class' => 'col-form-label')) }}
+            {{ Form::select('plans[]', $planOptions, $coupon->plans, array('class' => 'form-select select2', 'multiple' => 'multiple', 'required' => 'required')) }}
+        </div>
+
+
         <div class="form-group col-12 d-flex justify-content-end col-form-label">
             <input type="button" value="{{ __('Cancel') }}" class="btn btn-secondary btn-light"
                 data-bs-dismiss="modal">
@@ -34,3 +47,13 @@
         </div>
     </div>
 </form>
+
+
+<script>
+       $(document).ready(function() {
+        $('.select2').select2({
+            placeholder: "{{__('Select Plan')}}",
+            search: true
+        })
+    });
+</script>

@@ -16,6 +16,7 @@
                     alt="{{ config('app.name', 'Storego') }}" class="logo logo-lg" height="40px" />
             </a>
         </div>
+        @if(Auth::user()->plan_is_active)
         <div class="navbar-content">
             <ul class="dash-navbar">
                 @if (Auth::user()->type == 'super admin')
@@ -30,6 +31,33 @@
                             </a>
                         </li>
                     @endcan
+
+                    @can('Manage Admin Staff')
+                    <li class="dash-item dash-hasmenu {{ Request::segment(1) == 'users' || Request::segment(1) == 'roles' ? ' active dash-trigger' : 'collapsed' }}">
+                        <a href="#!" class="dash-link ">
+                            <span class="dash-micon">
+                                <i class="ti ti-users"></i>
+                            </span>
+                            <span class="dash-mtext">{{ __('Admin Staff') }}</span>
+                            <span class="dash-arrow">
+                                <i data-feather="chevron-right"></i>
+                            </span>
+                        </a>
+                        <ul class="dash-submenu {{ Request::segment(1) == 'roles' || Request::segment(1) == 'roles' ? ' show' : '' }}">
+                            @can('Manage Admin Role')
+                                <li class="dash-item {{ Request::route()->getName() == 'roles' ? ' active' : '' }}">
+                                    <a class="dash-link"
+                                        href="{{ route('roles.index') }}">{{ __('Roles') }}</a>
+                                </li>
+                            @endcan
+                            <li
+                                class="dash-item {{ Request::segment(1) == 'users.index' || Request::route()->getName() == 'users.show' ? ' active dash-trigger' : 'collapsed' }}">
+                                <a class="dash-link" href="{{ route('users.index') }}">{{ __('Staff') }}</a>
+                            </li>
+                        </ul>
+                    </li>
+                    @endcan
+                    
                     @can('Manage Store')
                         <li
                             class="dash-item dash-hasmenu {{ Request::segment(1) == 'store-resource' || Request::route()->getName() == 'store.grid' ? ' active dash-trigger' : 'collapsed' }}">
@@ -319,5 +347,6 @@
                 </div>
             </div>
         </div>
+        @endif
     </div>
 </nav>

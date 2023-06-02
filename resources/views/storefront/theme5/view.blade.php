@@ -361,6 +361,7 @@ $proimg=\App\Models\Utility::get_file('uploads/is_cover_image/');
                 },
                 success: function(response) {
                     if (response.status == "Success") {
+                        $("header").after(response.modal)
                         show_toastr('Success', response.success, 'success');
                         $("#shoping_counts").html(response.item_count);
                     } else {

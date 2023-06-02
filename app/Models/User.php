@@ -81,13 +81,16 @@ class User extends Authenticatable implements MustVerifyEmail
         )->where('created_by', '=', \Auth::user()->id)->count();
     }
 
-    public function assignPlan($planID)
+    public function assignPlan($planID, $customDuration=NULL)
     {
         $plan = Plan::find($planID);
         if($plan)
         {
             $this->plan = $plan->id;
-            if($plan->duration == 'Month')
+            $this->plan_is_active = 1;
+            if($customDuration) {
+                $this->plan_expire_date = Carbon::now()->addDays($customDuration)->isoFormat('YYYY-MM-DD');
+            } else if($plan->duration == 'Month')
             {
                 $this->plan_expire_date = Carbon::now()->addMonths(1)->isoFormat('YYYY-MM-DD');
             }

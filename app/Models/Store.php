@@ -78,6 +78,9 @@ class Store extends Model
         'enable_cod',
         'enable_bank',
         'bank_number',
+        'minimum_order',
+        'enable_whatsapp_button',
+        'whatsapp_link',
     ];
 
     public static function create($data)

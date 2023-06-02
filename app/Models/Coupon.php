@@ -12,6 +12,9 @@ class Coupon extends Model
         'discount',
         'limit',
         'description',
+        'plans',
+        'type',
+        'duration',
     ];
 
 

@@ -56,7 +56,18 @@
                             'Change Store',
                          ];
                             if (Auth::user()->type == 'super admin') {
-                                $modules[] = 'Language';
+                                $modules = [
+                                    'Dashboard',
+                                    'Admin Role',
+                                    'Admin Staff',
+                                    'Store',
+                                    'Coupans',
+                                    'Plans',
+                                    'Plan Request',
+                                    'Email Template',
+                                    'Settings',
+                                    'Language'
+                                ];
                             }
 
                         @endphp

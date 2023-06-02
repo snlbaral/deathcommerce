@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Coupon;
 use App\Models\Plan;
+use App\Models\PlanPrice;
 use App\Models\PlanOrder;
 use App\Models\User;
 use App\Models\Utility;
@@ -38,7 +39,7 @@ class PlanController extends Controller
                     )->join('users', 'plan_orders.user_id', '=', 'users.id')->orderBy('plan_orders.created_at', 'DESC')->where('users.id', '=', $objUser->id)->get();
                 }
     
-                $plans = Plan::get();
+                $plans = Plan::where(['status'=>1])->get();
                 $admin_payments_setting = Utility::getAdminPaymentSetting();
                 return view('plans.index', compact('plans', 'orders', 'admin_payments_setting'));
             // } else {
@@ -101,10 +102,14 @@ class PlanController extends Controller
                     $validation = [];
                     $validation['name'] = 'required|unique:plans';
                     $validation['price'] = 'required|numeric|min:0';
+                    $validation['monthly_price'] = 'required|numeric|min:0';
+                    $validation['yearly_price'] = 'required|numeric|min:0';
                     $validation['duration'] = 'required';
                     $validation['max_stores'] = 'required|numeric';
                     $validation['max_products'] = 'required|numeric';
                     $validation['max_users'] = 'required|numeric';
+                    $validation['trial_days'] = 'required|numeric';
+                    $validation['status'] = 'required';
 
                     if ($request->image) {
                         $validation['image'] = 'required|mimes:jpeg,png,jpg,gif,svg,pdf,doc|max:20480';
@@ -145,7 +150,16 @@ class PlanController extends Controller
                         $post['pwa_store'] = 'off';
                     }
 
-                    if (Plan::create($post)) {
+                    $post['price'] = $request->monthly_price;
+                    $plan = Plan::create($post);
+                    if ($plan) {
+                        PlanPrice::create([
+                            'plan_id'=>$plan->id,
+                            'country'=>'Default',
+                            'currency'=>'USD',
+                            'monthly'=>$request->monthly_price,
+                            'yearly'=>$request->yearly_price,
+                        ]);
                         return redirect()->back()->with('success', __('Plan created Successfully!'));
                     } else {
                         return redirect()->back()->with('error', __('Something is wrong'));
@@ -169,9 +183,55 @@ class PlanController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function show(Plan $plan)
+    public function show($id)
     {
-        //
+        if(\Auth::user()->can('Manage Plans')){
+            $plan = Plan::findorfail($id);
+            $pricing = PlanPrice::where('plan_id','=',$id)->get();
+            return view("plans.show", compact('plan','pricing'));
+        } else {
+            return redirect()->back()->with('error', 'Permission denied.');
+        }
+    }
+    
+    public function savePlanPrice(Request $request, $id)
+    {
+        if(\Auth::user()->can('Manage Plans')){
+            $validator = \Validator::make(
+                $request->all(), [
+                    'country' => 'required',
+                    'monthly_price' => 'required|numeric|min:0',
+                    'yearly_price' => 'required|numeric|min:0',
+                    'currency' => 'required',
+                ]
+            );
+            if ($validator->fails()) {
+                $messages = $validator->getMessageBag();
+                return redirect()->back()->with('error', $messages->first());
+            }
+            PlanPrice::create([
+                'plan_id'=>$id,
+                'country'=>$request->country,
+                'currency'=>$request->currency,
+                'monthly'=>$request->monthly_price,
+                'yearly'=>$request->yearly_price,
+            ]);
+            return redirect()->back()->with('success', __('Plan Price Added Successfully!'));
+        } else {
+            return redirect()->back()->with('error', 'Permission denied.');
+        }
+    }
+    
+    public function deletePlanPrice($id) {
+        if(\Auth::user()->can('Manage Plans')){
+            $planPrice = PlanPrice::findorfail($id);
+            $planPrice->delete();
+            return redirect()->back()->with(
+                    'success', 'Price Plan successfully deleted.'
+                );
+        } else {
+            return redirect()->back()->with('error', 'Permission denied.');
+        }
     }
 
     /**
@@ -233,10 +293,14 @@ class PlanController extends Controller
                                 $request->all(), [
                                     'name' => 'required|unique:plans,name,' . $planID,
                                     'price' => 'required|numeric|min:0',
+                                    'monthly_price' => 'required|numeric|min:0',
+                                    'yearly_price' => 'required|numeric|min:0',
                                     'duration' => 'required',
                                     'max_stores' => 'required|numeric',
                                     'max_products' => 'required|numeric',
                                     'max_users' => 'required|numeric',
+                                    'trial_days' => 'required|numeric',
+                                    'status' => 'required',
                                 ]
                             );
                         } else {
@@ -244,10 +308,14 @@ class PlanController extends Controller
                                 $request->all(), [
                                     'name' => 'required|unique:plans,name,' . $planID,
                                     'duration' => 'required',
+                                    'montly_price' => 'required|numeric|min:0',
+                                    'yearly_price' => 'required|numeric|min:0',
                                     'max_stores' => 'required|numeric',
                                     'max_products' => 'required|numeric',
                                     'max_users' => 'required|numeric',
                                     'image' => 'mimes:jpeg,png,jpg,gif,svg,pdf,doc|max:20480',
+                                    'trial_days' => 'required|numeric',
+                                    'status' => 'required',
                                 ]
                             );
                         }
@@ -299,9 +367,19 @@ class PlanController extends Controller
                             $path = $request->file('image')->storeAs('uploads/plan/', $fileNameToStore);
                             $post['image'] = $fileNameToStore;
                         }
-
+                        $post['price'] = $request->monthly_price;
                         if ($plan->update($post)) {
-                            return redirect()->back()->with('success', __('Plan updated Successfully!'));
+                            PlanPrice::updateOrCreate([
+                                'plan_id'=>$plan->id,
+                                'country'=>'Default'
+                            ],[
+                                'plan_id'=>$plan->id,
+                                'country'=>'Default',
+                                'currency'=>'USD',
+                                'monthly'=>$request->monthly_price,
+                                'yearly'=>$request->yearly_price,
+                            ]);
+                            return redirect()->route("plans.index")->with('success', __('Plan updated Successfully!'));
                         } else {
                             return redirect()->back()->with('error', __('Something is wrong'));
                         }
@@ -374,6 +452,8 @@ class PlanController extends Controller
             if (!empty($coupons)) {
                 $usedCoupun = $coupons->used_coupon();
                 if ($coupons->limit == $usedCoupun) {
+                } else if(!in_array($plan->id, json_decode($coupons->plans))) {
+                    // if coupon is not for this plan, skip the discount part
                 } else {
                     $discount_value = ($plan->price / 100) * $coupons->discount;
                     $plan_price = $plan->price - $discount_value;
@@ -402,6 +482,11 @@ class PlanController extends Controller
                 );
             }
         }
+    }
+
+    public function planExpired(Request $request) {
+        $plans = Plan::get();
+        return view('plans.expired', compact('plans'));
     }
 
 }

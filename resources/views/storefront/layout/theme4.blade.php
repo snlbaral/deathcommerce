@@ -298,6 +298,7 @@ if (empty($getStoreThemeSetting)) {
             </div>
             <div class="row footer-bottom">
                 <div class="col-12 footer-link-2 text-center">
+                    
                     @if ($getStoreThemeSetting[8]['section_enable'] == 'on')
                         <ul>
                             @if (!empty($getStoreThemeSetting[9]['inner-list'][0]['field_default_text']) && $getStoreThemeSetting[9]['inner-list'][0]['field_default_text'] == 'on')
@@ -345,6 +346,16 @@ if (empty($getStoreThemeSetting)) {
                             @endif
                         @endif
                         </ul>
+                        <div class="image-bottom" style="position: relative; margin-bottom: 4px;">
+                            <div class="d-flex align-items-center justify-content-center">
+                                @php
+                                    $logo = \App\Models\Utility::get_file('uploads/logo/');
+                                    $company_logo = \App\Models\Utility::GetLogo();
+                                @endphp
+                                <div class="text-secondary" style="margin-right:8px">Powered By</div>
+                                <img src="{{ $logo . '/' . (isset($company_logo) && !empty($company_logo) ? $company_logo : 'logo-dark.png') }}" alt="{{ config('app.name', 'Storego') }}" class="logo logo-lg" height="20px" />
+                            </div>
+                        </div>
                     @endif
                     @if ($getStoreThemeSetting[17]['section_enable'] == 'on')
                         <P> {{ $getStoreThemeSetting[18]['inner-list'][0]['field_default_text'] }}</P>
@@ -603,6 +614,10 @@ if (empty($getStoreThemeSetting)) {
     <noscript><img height="1" width="1" style="display:none"
             src="https://www.facebook.com/tr?id=0000&ev=PageView&noscript={{ $store_settings->fbpixel_code }}" /></noscript>
 
+            @if($store_settings['enable_whatsapp_button'])
+    <a class="bg-primary" style="position: fixed;bottom: 20px;right: 20px;z-index: 9999;border-radius: 50%;padding: 12px;" href="{{$store_settings['whatsapp_link']}}" target="_blank">
+  <img src="{{ asset('assets/images/whatsapp-48.png') }}" alt="WhatsApp Icon" width="28" height="28"></a>
+@endif
 </body>
 
 </html>

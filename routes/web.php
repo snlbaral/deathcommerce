@@ -91,9 +91,11 @@ Route::get('login/{lang?}', function () {
  })->name('login');
 require __DIR__ . '/auth.php';
 
+// Plan Expired
+Route::get('/plan/expired', [PlanController::class, 'planExpired'])->name('plan.expired')->middleware(['verified','auth','XSS']);
 
 
-Route::group(['middleware' => ['verified']], function () {
+Route::group(['middleware' => ['verified','CheckPlan:plan.expired']], function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware(['XSS']);
 
@@ -194,6 +196,7 @@ Route::group(['middleware' => ['verified']], function () {
         Route::get('pixel-setting/create',[SettingController::class,'CreatePixel'])->name('owner.pixel.create');
         Route::post('pixel-setting/{slug?}',[SettingController::class,'savePixelSettings'])->name('owner.pixel.setting');
         Route::delete('pixel-delete/{id}',[SettingController::class,'pixelDelete'])->name('pixel.delete');
+        Route::post('admin/pixel-setting/save',[SettingController::class,'saveAdminPixelSettings'])->name('admin.pixel.setting');
         Route::any('/cookie-consent', [SettingController::class,'CookieConsent'])->name('cookie-consent'); 
         Route::post('cookie-setting', [SettingController::class, 'saveCookieSettings'])->name('cookie.setting');
     });
@@ -222,6 +225,9 @@ Route::group(['middleware' => ['verified']], function () {
     Route::post('/plans', [PlanController::class, 'store'])->name('plans.store')->middleware(['auth', 'XSS']);
     Route::get('/plans/edit/{id}', [PlanController::class, 'edit'])->name('plans.edit')->middleware(['auth', 'XSS']);
     Route::put('/plans/{id}', [PlanController::class, 'update'])->name('plans.update')->middleware(['auth', 'XSS']);
+    Route::get('/plans/show/{id}', [PlanController::class, 'show'])->name('plans.show')->middleware(['auth', 'XSS']);
+    Route::post('/plans/price/{id}', [PlanController::class, 'savePlanPrice'])->name('plans.price.store')->middleware(['auth', 'XSS']);
+    Route::delete('/plans/price/delete/{id}', [PlanController::class, 'deletePlanPrice'])->name('plans.price.delete')->middleware(['auth', 'XSS']);
     Route::post('/user-plans/', [PlanController::class, 'userPlan'])->name('update.user.plan')->middleware(['auth', 'XSS']);
     Route::resource('orders', OrderController::class)->middleware(['auth', 'XSS']);
 
@@ -257,12 +263,14 @@ Route::group(['middleware' => ['verified']], function () {
     Route::get('/store-resource/edit/display/{id}', [StoreController::class, 'storeenable'])->name('store-resource.edit.display')->middleware(['auth', 'XSS']);
     Route::Put('/store-resource/display/{id}', [StoreController::class, 'storeenableupdate'])->name('store-resource.display')->middleware(['auth', 'XSS']);
     Route::resource('store-resource', StoreController::class)->middleware(['auth', 'XSS']);
+    Route::post("/store-resource/login", [StoreController::class, 'loginStoreResource'])->name('store-resource.login')->middleware(['auth','XSS']);
 
     Route::get('productcoupon/import/export', [ProductCouponController::class, 'fileImportExport'])->name('productcoupon.file.import');
     Route::post('productcoupon/import', [ProductCouponController::class, 'fileImport'])->name('productcoupon.import');
     Route::get('productcoupon/export', [ProductCouponController::class, 'fileExport'])->name('productcoupon.export');
 
     Route::resource('coupons', CouponController::class)->middleware(['auth', 'XSS']);
+    Route::post('pay-with-redeem-coupon', [CouponController::class, 'payWithRedeemCoupon'])->middleware(['auth', 'XSS'])->name('plan.pay.with.redeem.coupon');
 
     Route::post('prepare-payment', [PlanController::class, 'preparePayment'])->name('prepare.payment')->middleware(['auth', 'XSS']);
 
@@ -470,6 +478,7 @@ Route::resource('users',UserController::class)->middleware(['auth','XSS']);
 Route::get('users/reset/{id}',[UserController::class,'reset'])->name('users.reset')->middleware(['auth','XSS']);
 Route::post('users/reset/{id}',[UserController::class,'updatePassword'])->name('users.resetpassword')->middleware(['auth','XSS']);
 Route::resource('permissions', PermissionController::class)->middleware(['auth','XSS',]);
+
 
 //==================================== cache setting ====================================//
 Route::get('/config-cache', function() {

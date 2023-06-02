@@ -494,33 +494,30 @@ class StoreController extends Controller
 
     public function savestoresetting(Request $request, $id)
     {
-        $validator = \Validator::make(
-            $request->all(), [
+        $validation = [
                 'name' => 'required|max:120',
                 'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                 'logo' => 'mimes:jpeg,png,jpg,gif,svg,pdf,doc|max:20480',
                 'invoice_logo' => 'mimes:jpeg,png,jpg,gif,svg,pdf,doc|max:20480',
                 'metaimage'=>'mimes:jpeg,png,jpg,gif,svg|max:20480'
-            ]
-        );
+        ];
+
         if ($request->enable_domain == 'enable_domain') {
-            $validator = \Validator::make(
-                $request->all(), [
-                    'domains' => 'required',
-                ]
-            );
+            $validation['domains'] = 'required';
         }
         if ($request->enable_domain == 'enable_subdomain') {
-            $validator = \Validator::make(
-                $request->all(), [
-                    'subdomain' => 'required',
-                ]
-            );
+            $validation['subdomain'] = 'required';
         }
+        if (isset($request->enable_whatsapp_button) && $request->enable_whatsapp_button == 'on') {
+            $validation['whatsapp_link'] = 'required';
+        }
+
+        $validator = \Validator::make(
+            $request->all(), $validation
+        );
 
         if ($validator->fails()) {
             $messages = $validator->getMessageBag();
-
             return redirect()->back()->with('error', $messages->first());
         }
 
@@ -746,6 +743,15 @@ class StoreController extends Controller
         if ($request->enable_domain == 'enable_subdomain') {
             $store['subdomain'] = $subdomain_name;
         }
+        if(isset($request->enable_whatsapp_button) && $request->enable_whatsapp_button=='on') {
+            $store['enable_whatsapp_button'] = 1;
+            $store['whatsapp_link'] = $request->whatsapp_link;
+        } else {
+            $store['enable_whatsapp_button'] = 0;
+            $store['whatsapp_link'] = NULL;
+        }
+
+
         $store['tagline'] = $request->tagline;
         $store['is_checkout_login_required'] = $request->is_checkout_login_required ?? 'off';
         $store['enable_rating'] = $request->enable_rating ?? 'off';
@@ -907,14 +913,14 @@ class StoreController extends Controller
 
         }
 
-        if (!empty($store)) {
+        if (!empty($store) && $store->is_active) {
             if (!Auth::check()) {
-                visitor()->visit($slug);
+                visitor()->visit($store);
             }
             if (Utility::CustomerAuthCheck($slug) == false) {
                 // dd($slug);
                 // dd(visitor()->visit($slug));
-                visitor()->visit($slug);
+                visitor()->visit($store);
             }
             $userstore = UserStore::where('store_id', $store->id)->first();
             $settings = \DB::table('settings')->where('name', 'company_favicon')->where('created_by', $userstore->user_id)->first();
@@ -1940,6 +1946,64 @@ class StoreController extends Controller
         );
     }
 
+    private function getCartModal($slug, $productname, $pro_img, $productprice) {
+        $pro_img = \App\Models\Utility::get_file('uploads/is_cover_image/').$pro_img;
+        return '<div class="modal fade modal-popup" id="cartModal" tabindex="-1" role="dialog" aria-hidden="true" style="background: transparent;width:fit-content;top:6px;left:auto;right:0;padding-top:0px !important;;display:block !important; align-items:flex-start !important; outline:0px">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-top md-dialog" role="document" style="margin:0px">
+            <div class="modal-content">
+                <div class="popup-content">
+                    <div class="modal-header  popup-header align-items-center">
+                        <div class="modal-title">
+                            <h6 class="mb-0" id="modelCommanModelLabel"></h6>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="text-primary">
+                                <i class="fa fa-check"></i>
+                                '.__("Item added to cart").'
+                            </div>
+                            <button type="button" class="close close-button" data-bs-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true" class="fa fa-times"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="modal-body">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <img class="img-fluid" src="'.$pro_img.'" width="150"/>
+                            <div>
+                                <div class="text-lg">'.$productname.'</div>
+                                
+                                <div class="d-flex items-center">
+                                    <div class="text-secondary" style="margin-right: 4px">price:</div>
+                                    <div class="text-secondary">$'.$productprice.'</div>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="'.route('store.cart', $slug).'" class="btn white-btn w-100">'.__('View Cart').'</a>
+                        <a href="'.route('user-address.useraddress',$slug).'" class="btn w-100" style="margin-top: 8px">'.__('Proceed to checkout').'</a>
+                        <a href="'.route('store.slug',$slug).'" class="star text-primary d-flex justify-content-center">'.__('Return to shop').'</a>
+                        
+                        
+                    </div>
+                    
+                    
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <script>
+        var modalEle = document.getElementById("cartModal")
+        var headerHeight = $("header").height();
+        modalEle.style.top = headerHeight+"px"
+        var headerHeight = $("header").height();
+        var myModal = new bootstrap.Modal(modalEle, {
+            keyboard: false
+        })
+        myModal.show()
+    </script>
+    ';
+    }
+
     public function addToCart(Request $request, $product_id, $slug, $variant_id = 0)
     {
         if ($request->ajax()) {
@@ -2070,6 +2134,7 @@ class StoreController extends Controller
 
                 session()->put($slug, $cart);
 
+
                 return response()->json(
                     [
                         'code' => 200,
@@ -2077,6 +2142,7 @@ class StoreController extends Controller
                         'success' => $productname . __('added to cart successfully!'),
                         'cart' => $cart['products'],
                         'item_count' => count($cart['products']),
+                        'modal' =>  $this->getCartModal($slug, $productname, $pro_img, $productprice)
                     ]
                 );
             }
@@ -2114,6 +2180,7 @@ class StoreController extends Controller
                                 'success' => $productname . __('   added to cart successfully!'),
                                 'cart' => $cart['products'],
                                 'item_count' => count($cart['products']),
+                                'modal' =>  $this->getCartModal($slug, $productname, $pro_img, $productprice)
                             ]
                         );
                     }
@@ -2150,6 +2217,7 @@ class StoreController extends Controller
                                 'success' => $productname . __('   added to cart successfully!'),
                                 'cart' => $cart['products'],
                                 'item_count' => count($cart['products']),
+                                'modal' =>  $this->getCartModal($slug, $productname, $pro_img, $productprice)
                             ]
                         );
                     }
@@ -2201,6 +2269,7 @@ class StoreController extends Controller
                     'success' => $productname . __('   added to cart successfully!'),
                     'cart' => $cart['products'],
                     'item_count' => count($cart['products']),
+                    'modal' =>  $this->getCartModal($slug, $productname, $pro_img, $productprice)
                 ]
             );
         }
@@ -3488,7 +3557,7 @@ class StoreController extends Controller
         if (\Auth::user()->type == 'super admin') {
             $user = User::find($user_id);
 
-            $plans = Plan::get();
+            $plans = Plan::where(['status'=>1])->get();
 
             return view('user.plan', compact('user', 'plans'));
         }
@@ -4650,6 +4719,14 @@ class StoreController extends Controller
 
 
         return $data;
+    }
+
+
+    public function loginStoreResource(Request $request) {
+        $user = User::findorfail($request->user_id);
+        Auth::logout();
+        Auth::login($user);
+        return redirect("/dashboard");
     }
 
 }

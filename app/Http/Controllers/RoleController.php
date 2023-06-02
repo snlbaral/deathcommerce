@@ -17,7 +17,10 @@ class RoleController extends Controller
      */
     public function index()
     {
-        if(\Auth::user()->can('Manage Role'))
+        if(\Auth::user()->can('Manage Admin Role')) {
+            $roles = Role::where("store_id",'=',0)->where("created_by","=",\Auth::user()->creatorId())->get();
+            return view('roles.index')->with('roles', $roles);
+        } else if(\Auth::user()->can('Manage Role'))
         {
             $roles = Role::where('store_id', '=', \Auth::user()->current_store)->where('created_by', '=', \Auth::user()->creatorId())->get();
             return view('roles.index')->with('roles', $roles);
@@ -35,10 +38,17 @@ class RoleController extends Controller
      */
     public function create()
     {
-        $permissions = Permission::get();
-        if(\Auth::user()->can('Create Role'))
+        $user = \Auth::user();
+        if(\Auth::user()->can('Create Admin Role')) {
+            $permissions = new Collection();
+            foreach($user->roles as $role)
+            {
+                $permissions = $permissions->merge($role->permissions);
+            }
+            $permissions = $permissions->pluck('name', 'id')->toArray();
+            return view('roles.create', ['permissions' => $permissions]);
+        } else if(\Auth::user()->can('Create Role'))
         {
-            $user = \Auth::user();
             if($user->type == 'super admin')
             {
                 $permissions = Permission::all()->pluck('name', 'id')->toArray();
@@ -71,23 +81,43 @@ class RoleController extends Controller
      */
     public function store(Request $request)
     {
-        
-        if(\Auth::user()->can('Create Role'))
-        {
-            // $role = Role::where('name', '=', $request->name)->where('created_by',\Auth::user()->creatorId())->first();
-            // if(isset($role))
-            // {
-            //     return redirect()->back()->with('error', __('The Role has Already Been Taken.'));
-            // }
-            // else
-            // {
+        if(\Auth::user()->can('Create Admin Role')) {
+            $validator = \Validator::make(
+                $request->all(),
+                [
+                    'name' => [
+                        'required',
+                        Rule::unique('roles')->where(function ($query) {
+                        return $query->where('created_by', \Auth::user()->id)->where('store_id',\Auth::user()->current_store);
+                        })
+                    ],
+                    'permissions' => 'required',
+                ]
+            );
 
-                // $this->validate(
-                //     $request, [
-                //                 'name' => 'required|max:100|unique:roles,name,NULL,id,created_by,' . \Auth::user()->creatorId(),
-                //                 'permissions' => 'required',
-                //             ]
-                // );
+            if($validator->fails())
+            {
+                $messages = $validator->getMessageBag();
+                return redirect()->back()->with('error', $messages->first());
+            }
+
+            $name             = $request['name'];
+            $role             = new Role();
+            $role->name       = $name;
+            $role->store_id = 0;
+            $role->created_by = \Auth::user()->creatorId();
+            $permissions      = $request['permissions'];
+            $role->save();
+
+            foreach($permissions as $permission)
+            {
+                $p    = Permission::where('id', '=', $permission)->firstOrFail();
+                $role->givePermissionTo($p);
+            }
+            return redirect()->route('roles.index')->with('success', 'Role successfully created.');
+        }   
+        else if(\Auth::user()->can('Create Role'))
+        {
                 $validator = \Validator::make(
                     $request->all(),
                     [
@@ -120,12 +150,10 @@ class RoleController extends Controller
                 foreach($permissions as $permission)
                 {
                     $p    = Permission::where('id', '=', $permission)->firstOrFail();
-                    // $role = Role::where('name', '=', $name)->where('created_by',\Auth::user()->creatorId())->first();
                     $role->givePermissionTo($p);
                 }
 
                 return redirect()->route('roles.index')->with('success', 'Role successfully created.');
-            // }
         }
         else
         {
@@ -148,10 +176,17 @@ class RoleController extends Controller
      */
     public function edit(Role $role)
     {
-        if(\Auth::user()->can('Edit Role'))
+        $user = \Auth::user();
+        if(\Auth::user()->can('Create Admin Role')) {
+            $permissions = new Collection();
+            foreach($user->roles as $role1)
+            {
+                $permissions = $permissions->merge($role1->permissions);
+            }
+            $permissions = $permissions->pluck('name', 'id')->toArray();
+            return view('roles.edit', compact('role', 'permissions'));
+        } else if(\Auth::user()->can('Edit Role'))
         {
-
-            $user = \Auth::user();
             if($user->type == 'super admin')
             {
                 $permissions = Permission::all()->pluck('name', 'id')->toArray();
@@ -185,7 +220,7 @@ class RoleController extends Controller
      */
     public function update(Request $request, Role $role)
     {
-        if(\Auth::user()->can('Edit Role'))
+        if(\Auth::user()->can('Create Admin Role') || \Auth::user()->can('Edit Role'))
         {
             
             $this->validate(
@@ -229,17 +264,32 @@ class RoleController extends Controller
      */
     public function destroy(Role $role)
     {
-        if(\Auth::user()->can('Delete Role'))
-        {
-            $role->delete();
-
-            return redirect()->route('roles.index')->with(
-                'success', 'Role successfully deleted.'
-            );
-        }
-        else
-        {
-            return redirect()->back()->with('error', 'Permission denied.');
+        if($role->store_id==0) {
+            if(\Auth::user()->can('Delete Admin Role'))
+            {
+                $role->delete();
+    
+                return redirect()->route('roles.index')->with(
+                    'success', 'Role successfully deleted.'
+                );
+            }
+            else
+            {
+                return redirect()->back()->with('error', 'Permission denied.');
+            }
+        } else {
+            if(\Auth::user()->can('Delete Role'))
+            {
+                $role->delete();
+    
+                return redirect()->route('roles.index')->with(
+                    'success', 'Role successfully deleted.'
+                );
+            }
+            else
+            {
+                return redirect()->back()->with('error', 'Permission denied.');
+            }
         }
     }
 }

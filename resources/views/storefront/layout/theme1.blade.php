@@ -69,6 +69,7 @@
         <link rel="stylesheet" href="{{ asset('assets/theme1/css/main-style.css') }}">
         <link rel="stylesheet" href="{{ asset('assets/theme1/css/responsive.css') }}">
     @endif
+    
 
     {{-- pwa customer app --}}
     <meta name="mobile-wep-app-capable" content="yes">
@@ -291,7 +292,7 @@
                                 </li>
                             @else
                                 <li class="login-btn-header set has-children">
-                                    <a href="{{ route('customer.login', $store->slug) }}" class="acnav-label">
+                                    <a href="{{ route('customer.login', $store->slug) }}" class="">
                                         <span class="login-text" style="display: block;">{{ __('Log in') }}</span>
                                     </a>
                                 </li>
@@ -368,7 +369,10 @@
         </div>
     </header>
 
+
+
     @yield('content')
+    
 
     <footer class="footer">
         <div class="container">
@@ -387,7 +391,14 @@
                                     </div>
                                     
                                     <div class="image-bottom" style="position: absolute; bottom: 0;">
-                                        <img src="{{ asset('assets/theme1/images/death.png') }}" alt="Your Image" width="300" height="70">
+                                        <div class="d-flex align-items-center">
+                                            @php
+                                                $logo = \App\Models\Utility::get_file('uploads/logo/');
+                                                $company_logo = \App\Models\Utility::GetLogo();
+                                            @endphp
+                                            <div class="text-secondary" style="margin-right:8px">Powered By</div>
+                                            <img src="{{ $logo . '/' . (isset($company_logo) && !empty($company_logo) ? $company_logo : 'logo-dark.png') }}" alt="{{ config('app.name', 'Storego') }}" class="logo logo-lg" height="20px" />
+                                        </div>
                                     </div>
                                 </div>
                                 @if ($getStoreThemeSetting[8]['inner-list'][0]['field_default_text'] == 'on')
@@ -904,9 +915,10 @@
         });
     </script>
     <!--scripts end here-->
-<a class="whatsapp-link" href="https://wa.me/1234567890" target="_blank">
-  <img src="{{ asset('assets/theme1/images/whatsappicon.png') }}" alt="WhatsApp Icon" width="50" height="50">
-</a>
+@if($store_settings['enable_whatsapp_button'])
+    <a class="bg-primary" style="position: fixed;bottom: 20px;right: 20px;z-index: 9999;border-radius: 50%;padding: 12px;" href="{{$store_settings['whatsapp_link']}}" target="_blank">
+  <img src="{{ asset('assets/images/whatsapp-48.png') }}" alt="WhatsApp Icon" width="28" height="28"></a>
+@endif
 </body>
 
 </html>

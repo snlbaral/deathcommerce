@@ -1,6 +1,10 @@
 @extends('layouts.admin')
 @section('page-title')
-    {{ __('Product') }}
+    @if(\Auth::user()->can('Manage Admin Role'))
+        {{ __('Admin Roles') }}
+    @else
+        {{ __('Product') }}
+    @endif
 @endsection
 @section('title')
     <div class="d-inline-block">
@@ -46,7 +50,7 @@
                                     </td>
                                     <td class="Action">
                                         <span>
-                                            @can('Edit Role')
+                                            @canany(['Edit Role','Edit Admin Role'])
                                                 <div class="action-btn ms-2">
                                                     <a class="btn btn-sm btn-icon  bg-light-secondary me-2"
                                                         data-url="{{ URL::to('roles/' . $role->id . '/edit')}}"
@@ -56,9 +60,9 @@
                                                         <i class="ti ti-pencil"></i>
                                                     </a>
                                                 </div>
-                                            @endcan
+                                            @endcanany
 
-                                            @can('Delete Role')
+                                            @canany(['Delete Role','Delete Admin Role'])
                                                 <div class="action-btn ms-2">
                                                     <a class="bs-pass-para btn btn-sm btn-icon bg-light-secondary" href="#"
                                                         data-title="{{ __('Delete Role') }}"
@@ -72,7 +76,7 @@
                                                     {!! Form::open(['method' => 'DELETE', 'route' => ['roles.destroy', $role->id], 'id' => 'delete-form-' . $role->id]) !!}
                                                     {!! Form::close() !!}
                                                 </div>
-                                            @endcan
+                                            @endcanany
                                         </span>
                                     </td>
                                 </tr>

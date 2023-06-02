@@ -14,10 +14,11 @@ $dir = asset(Storage::url('uploads/plan'));
         if (type != '') {
             $('a[href="#' + type + '"]').addClass('active').removeClass('text-primary');
         } else {
+            $("#stripe_payment").addClass('active')
             $('.list-group-item:eq(0)').addClass('active').removeClass('text-primary');
         }
 
-        $(document).on('click', '.list-group-item', function() {
+        $(document).on('click', '.list-group-item', function(e) {
             $('.list-group-item').removeClass('active');
             $('.list-group-item').removeClass('text-primary');
             setTimeout(() => {
@@ -46,6 +47,7 @@ $dir = asset(Storage::url('uploads/plan'));
                     if(ele.closest($('#payfast-form')).length == 1){
                         get_payfast_status(data.price,coupon);
                     }
+                    $('#stripe_final_price').text(data.final_price)
                     $('.final-price').val(data.price);
                     $('#final_price_pay').val(data.price);
                     $('#mollie_total_price').val(data.price);
@@ -67,7 +69,7 @@ $dir = asset(Storage::url('uploads/plan'));
 <script type="text/javascript">
     @if($plan->price > 0.0 && isset($admin_payments_details['is_stripe_enabled']) && $admin_payments_details['is_stripe_enabled']=='on')
 
-    var stripe = Stripe('pk_test_aLoicAw16w12wxLlmI9uluaf008XMnn2VJ');
+    var stripe = Stripe("{{$admin_payments_details['stripe_key']}}");
 
     var elements = stripe.elements();
 
@@ -341,6 +343,9 @@ $dir_payment = asset(Storage::url('uploads/payments'));
                                         <div class="float-end"><i class="ti ti-chevron-right"></i></div>
                                     </a>
                                 @endif
+                                <a href="#redeemable_coupon" class="list-group-item list-group-item-action border-0">{{ __('Redeemable Coupon') }}
+                                        <div class="float-end"><i class="ti ti-chevron-right"></i></div>
+                                </a>
 
                                 @if (isset($admin_payments_details['is_paypal_enabled']) && $admin_payments_details['is_paypal_enabled'] == 'on')
                                     <a href="#paypal_payment"
@@ -445,8 +450,8 @@ $dir_payment = asset(Storage::url('uploads/payments'));
                                     </div>
 
                                     <h3 class="mb-4 f-w-600  ">
-                                        {{ env('CURRENCY_SYMBOL') ? env('CURRENCY_SYMBOL') : '$' }}{{ $plan->price . ' / ' . __(\App\Models\Plan::$arrDuration[$plan->duration]) }}</small>
-                                        </h1>
+                                        <span id="stripe_final_price">{{ env('CURRENCY_SYMBOL') ? env('CURRENCY_SYMBOL') : '$' }}{{ $plan->price }}</span> <small>/ {{ __(\App\Models\Plan::$arrDuration[$plan->duration]) }}</small>
+                                    </h3>
                                         <p class="mb-0">
                                             {{ __('Trial : ') . $plan->trial_days . __(' Days') }}<br />
                                         </p>
@@ -625,6 +630,49 @@ $dir_payment = asset(Storage::url('uploads/payments'));
                     </div>
                     {{-- stripr payment end --}}
                     @endif
+
+
+                    <div id="" class="card">
+                        <div class="card-header">
+                            <h5>{{ __('Redeemable Coupon') }}</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="tab-pane"
+                                    id="redeemable_coupon">
+                                    {{-- <div class="card"> --}}
+                                    <form class="w3-container w3-display-middle w3-card-4" method="POST" id="redeem-form"
+                                        action="{{ route('plan.pay.with.redeem.coupon') }}">
+                                        @csrf
+                                        <div class="row">
+                                            <div class="col-md-12 mt-4 row">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="form-group w-100">
+                                                        <label for="paypal_coupon"
+                                                            class="form-label">{{ __('Coupon') }}</label>
+                                                        <input type="text" name="coupon"
+                                                            class="form-control coupon"
+                                                            placeholder="{{ __('Enter Redeemable Coupon Code') }}" required>
+                                                    </div>
+                                                    
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-12 my-2 px-2">
+                                                <div class="text-end">
+                                                    <input type="hidden" name="plan_id"
+                                                        value="{{ \Illuminate\Support\Facades\Crypt::encrypt($plan->id) }}">
+                                                    <input type="submit" value="{{ __('Upgrade Now') }}"
+                                                        class="btn btn-xs btn-primary">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                    </form>
+                            </div>
+                        </div>
+                    </div>
+
+
+
                     @if (isset($admin_payments_details['is_paypal_enabled']) && $admin_payments_details['is_paypal_enabled'] == 'on')
                     {{-- paypal  --}}
                     <div id="paypal_payment" class="card">

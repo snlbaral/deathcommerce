@@ -23,6 +23,54 @@ class UsersTableSeeder extends Seeder
     {
         $arrPermissions =[
             [
+                "name"=>"Manage Admin Staff",
+                "guard_name" => "web",
+                "created_at" => date('Y-m-d H:i:s'),
+                "updated_at" => date('Y-m-d H:i:s'),
+            ],
+            [
+                "name"=>"Create Admin Staff",
+                "guard_name" => "web",
+                "created_at" => date('Y-m-d H:i:s'),
+                "updated_at" => date('Y-m-d H:i:s'),
+            ],
+            [
+                "name"=>"Edit Admin Staff",
+                "guard_name" => "web",
+                "created_at" => date('Y-m-d H:i:s'),
+                "updated_at" => date('Y-m-d H:i:s'),
+            ],
+            [
+                "name"=>"Delete Admin Staff",
+                "guard_name" => "web",
+                "created_at" => date('Y-m-d H:i:s'),
+                "updated_at" => date('Y-m-d H:i:s'),
+            ],
+            [
+                "name"=>"Manage Admin Role",
+                "guard_name" => "web",
+                "created_at" => date('Y-m-d H:i:s'),
+                "updated_at" => date('Y-m-d H:i:s'),
+            ],
+            [
+                "name"=>"Create Admin Role",
+                "guard_name" => "web",
+                "created_at" => date('Y-m-d H:i:s'),
+                "updated_at" => date('Y-m-d H:i:s'),
+            ],
+            [
+                "name"=>"Edit Admin Role",
+                "guard_name" => "web",
+                "created_at" => date('Y-m-d H:i:s'),
+                "updated_at" => date('Y-m-d H:i:s'),
+            ],
+            [
+                "name"=>"Delete Admin Role",
+                "guard_name" => "web",
+                "created_at" => date('Y-m-d H:i:s'),
+                "updated_at" => date('Y-m-d H:i:s'),
+            ],
+            [
                 "name" => "Manage Dashboard",
                 "guard_name" => "web",
                 "created_at" => date('Y-m-d H:i:s'),
@@ -539,6 +587,14 @@ class UsersTableSeeder extends Seeder
             ["name"=>"Manage Settings"],
             ["name"=>"Manage Plan Order"],
             ["name"=>"Manage Plan Request"],
+            ["name"=>"Manage Admin Staff"],
+            ["name"=>"Create Admin Staff"],
+            ["name"=>"Edit Admin Staff"],
+            ["name"=>"Delete Admin Staff"],
+            ["name"=>"Manage Admin Role"],
+            ["name"=>"Create Admin Role"],
+            ["name"=>"Edit Admin Role"],
+            ["name"=>"Delete Admin Role"],
         ];
         $superAdminRole->givePermissionTo($superAdminPermissions);
         $superAdmin              = User::create(

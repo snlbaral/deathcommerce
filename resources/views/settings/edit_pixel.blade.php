@@ -1,8 +1,18 @@
-{{ Form::open(['method'=>'POST','route'=>array('owner.pixel.setting',$store_settings->slug)]) }}
+@php
+    if(\Auth::user()->type=="super admin") {
+        $route = array('admin.pixel.setting');
+    } else {
+        $route = array('owner.pixel.setting',$store_settings->slug);
+    }
+@endphp
+
+{{ Form::open(['method'=>'POST','route'=>$route]) }}
 <div class="row">
     <div class="col-12">
         <input type="hidden" name="id" id="id" >
-        <input type="hidden" name="store_id" id="{{ $store_settings->id }}">
+        @if(\Auth::user()->type!="super admin")
+            <input type="hidden" name="store_id" id="{{ $store_settings->id }}">
+        @endif
         <div class="form-group">
             {{ Form::label('Platform', __('Platform'), ['class' => 'col-form-label']) }}
             {{ Form::select('platform', Utility::pixel_plateforms(),null, ['class' => 'form-control', 'placeholder'=>'Please Select','required'=>'required']) }}

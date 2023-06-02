@@ -10,6 +10,7 @@ use App\Models\Store;
 use App\Models\User;
 use App\Models\UserStore;
 use App\Models\Utility;
+use App\Models\PixelFields;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -140,7 +141,12 @@ class DashboardController extends Controller
                 } else {
                     $settings = Utility::settings();
                     if ($settings['display_landing_page'] == 'on') {
-                        return view('layouts.landing');
+                        $pixels = PixelFields::where('store_id',0)->get();
+                        $pixelScript = [];
+                        foreach ($pixels as $pixel) {
+                            $pixelScript[] = pixelSourceCode( $pixel['platform'], $pixel['pixel_id'] );
+                        }
+                        return view('layouts.landing', compact("pixelScript"));
                     } else {
                         return redirect('login');
                     }

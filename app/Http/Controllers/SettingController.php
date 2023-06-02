@@ -30,8 +30,8 @@ class SettingController extends Controller
 
             if (Auth::user()->type == 'super admin') {
                 $admin_payment_setting = Utility::getAdminPaymentSetting();
-
-                return view('settings.index', compact('settings', 'admin_payment_setting'));
+                $PixelFields = PixelFields::where('store_id' , 0)->orderBy('id')->get();
+                return view('settings.index', compact('settings', 'admin_payment_setting', 'PixelFields'));
             } else {
                 $user = Auth::user();
                 $store_settings = Store::where('id', $user->current_store)->first();
@@ -47,7 +47,7 @@ class SettingController extends Controller
                     );
 
                     $serverIp = gethostbyname($serverName);
-                    if ($serverIp == $_SERVER['SERVER_ADDR']) {
+                    if (isset($_SERVER['SERVER_ADDR']) && $serverIp == $_SERVER['SERVER_ADDR']) {
                         $serverIp;
                     } else {
                         $serverIp = request()->server('SERVER_ADDR');
@@ -595,14 +595,28 @@ class SettingController extends Controller
     public function saveOwnerPaymentSettings(Request $request, $slug)
     {
         $store = Store::where('slug', $slug)->first();
-
-        $validator = \Validator::make(
-            $request->all(), [
+        $validation = [
                 'currency' => 'required|string|max:255',
                 'currency_symbol' => 'required|string|max:255',
                 // 'telegrambot' => 'required',
                 // 'telegramchatid' => 'required',
-            ]
+        ];
+
+        if(isset($request->enable_minimum) && $request->enable_minimum=='on') {
+            $validation['minimum_order']='required|numeric';
+        }
+
+        if (isset($request->enable_stripe) && $request->enable_stripe == 'on') {
+            $validation['stripe_key'] = 'required|string|max:255';
+            $validation['stripe_secret'] = 'required|string|max:255';
+        } elseif (isset($request->enable_paypal) && $request->enable_paypal == 'on') {
+            $validation['paypal_mode'] = 'required|string';
+            $validation['paypal_client_id'] = 'required|string';
+            $validation['paypal_secret_key'] = 'required|string';
+        }
+
+        $validator = \Validator::make(
+            $request->all(), $validation
         );
 
         if ($validator->fails()) {
@@ -610,24 +624,13 @@ class SettingController extends Controller
             return redirect()->back()->with('error', $messages->first());
         }
 
-
-        if (isset($request->enable_stripe) && $request->enable_stripe == 'on') {
-            $request->validate(
-                [
-                    'stripe_key' => 'required|string|max:255',
-                    'stripe_secret' => 'required|string|max:255',
-                ]
-            );
-        } elseif (isset($request->enable_paypal) && $request->enable_paypal == 'on') {
-            $request->validate(
-                [
-                    'paypal_mode' => 'required|string',
-                    'paypal_client_id' => 'required|string',
-                    'paypal_secret_key' => 'required|string',
-                ]
-            );
+        if(isset($request->enable_minimum) && $request->enable_minimum=='on') {
+            $store['enable_minimum'] = 1;
+            $store['minimum_order'] = $request->minimum_order;
+        } else {
+            $store['enable_minimum'] = 0;
+            $store['minimum_order'] = 0;
         }
-
         $store['currency'] = $request->currency_symbol;
         $store['currency_code'] = $request->currency;
         $store['currency_symbol_position'] = $request->currency_symbol_position;
@@ -1486,6 +1489,24 @@ class SettingController extends Controller
 
         return redirect()->back()->with('success', __('Fields Saves Successfully.!'));
     }
+
+    public function saveAdminPixelSettings(Request $request) {
+        if(\Auth::user()->type=="super admin") {
+            $request->validate([
+                'platform'=>'required',
+                'pixel_id'=>'required'
+            ]);
+            $pixel_fields = new PixelFields();
+            $pixel_fields->platform = $request->platform;
+            $pixel_fields->pixel_id = $request->pixel_id;
+            $pixel_fields->store_id = 0;
+            $pixel_fields->save();
+            return redirect()->back()->with('success', __('Fields Saves Successfully.!'));
+        } else {
+            return redirect()->back()->with('error', __('Permission denied.'));
+        }
+    }
+
     public function pixelDelete($id){
         $pixelfield= PixelFields::find($id);
         $pixelfield->delete();

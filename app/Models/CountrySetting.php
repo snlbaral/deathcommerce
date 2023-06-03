@@ -5,16 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PlanPrice extends Model
+class CountrySetting extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'plan_id',
-        'country',
-        'currency',
-        'monthly',
-        'yearly',
-        'payment_gateways',
-        'delivery_methods',
+        'name',
+        'stripe_currency',
+        'store_currency',
+        'system_language',
+        'store_language',
     ];
 }

@@ -69,6 +69,8 @@ class Utility extends Model
             $data = $data->get();
         }
         $settings = [
+            "stripe_currency" => "USD",
+            "store_currency" => "USD",
             "site_currency" => "USD",
             "site_currency_symbol" => "$",
             "currency_symbol_position" => "pre",
@@ -873,6 +875,10 @@ class Utility extends Model
         ];
 
         return $arr;
+    }
+
+    public static function simplePriceFormat($price, $slug=null) {
+        return number_format($price, Utility::getValByName('decimal_number'));
     }
 
     public static function priceFormat($price, $slug = null)
@@ -2214,6 +2220,8 @@ Order Date:" . ' ' . self::dateFormat($order->created_at));
             "bill_template" => "template1",
             "proposal_template" => "template1",
             "default_language" => "en",
+            "system_language" => "en",
+            "store_language" => "en",
             "enable_stripe" => "",
             "enable_paypal" => "",
             "paypal_mode" => "",

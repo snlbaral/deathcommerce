@@ -9,7 +9,7 @@
     </div>
 
     <input type="hidden" name="price" value="0"/>
-    <input type="hidden" name="duration" value="Lifetime"/>
+    <input type="hidden" name="duration" value="Month"/>
 
     <div class="col-md-12">        
         <div class="form-group row">

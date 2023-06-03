@@ -6,6 +6,7 @@ use App\Mail\TestMail;
 use App\Models\Plan;
 use App\Models\Store;
 use App\Models\User;
+use App\Models\CountrySetting;
 use App\Models\Utility;
 use App\Models\PixelFields;
 use Artisan;
@@ -30,8 +31,9 @@ class SettingController extends Controller
 
             if (Auth::user()->type == 'super admin') {
                 $admin_payment_setting = Utility::getAdminPaymentSetting();
+                $countrySettings = CountrySetting::get();
                 $PixelFields = PixelFields::where('store_id' , 0)->orderBy('id')->get();
-                return view('settings.index', compact('settings', 'admin_payment_setting', 'PixelFields'));
+                return view('settings.index', compact('settings', 'admin_payment_setting', 'PixelFields','countrySettings'));
             } else {
                 $user = Auth::user();
                 $store_settings = Store::where('id', $user->current_store)->first();

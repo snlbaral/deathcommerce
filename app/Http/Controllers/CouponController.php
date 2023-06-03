@@ -280,7 +280,7 @@ class CouponController extends Controller
                     $coupons->is_active = 0;
                     $coupons->save();
                 }
-                redirect()->route('plan.index')->with('success', __('Plan successfully upgraded.'));
+                redirect()->route('plans.index')->with('success', __('Plan successfully upgraded.'));
             } else {
                 return redirect()->back()->with('error', __('Plan fail to upgrade.'));
             }

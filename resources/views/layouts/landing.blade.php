@@ -930,6 +930,7 @@
     </section>
     <!-- [ dashboard ] End -->
     <!-- Required Js -->
+    <script src="{{asset('custom/js/jquery.min.js')}}"></script>
     <script src="{{asset('assets/js/plugins/popper.min.js')}}"></script>
     <script src="{{asset('assets/js/plugins/bootstrap.min.js')}}"></script>
     <script src="{{asset('assets/js/pages/wow.min.js')}}"></script>
@@ -951,6 +952,34 @@
         }
         ost = cOst;
       });
+      function changeURL(countryCode) {
+        countryCode=countryCode.toLowerCase()
+        // Get the current URL
+        var currentUrl = window.location.href;
+        // Split the URL by slashes
+        var urlParts = currentUrl.split('/');
+        // Get the last part after the slash
+        var lastPart = urlParts[urlParts.length - 1];
+        if(countryCode!==lastPart) {
+          // Append a string or a parameter to the end of the URL
+          var newUrl = currentUrl+countryCode;
+          // Replace the URL without redirecting
+          window.history.replaceState({}, "", newUrl);
+        }
+      }
+      $(document).ready(function(){
+          var countryCode = null
+          if(!localStorage.getItem('country_code')) {
+              $.get('https://ipinfo.io', function() {}, "jsonp").always(function(resp) {
+                  var countryCode = (resp && resp.country) ? resp.country : "";
+                  localStorage.setItem('country_code', countryCode)
+                  changeURL(countryCode)
+              })
+          } else {
+            countryCode = localStorage.getItem('country_code')
+            changeURL(countryCode)
+          }
+      })
       // End [ Menu hide/show on scroll ]
       var wow = new WOW({
         animateClass: "animate__animated", // animation css class (default is animated)

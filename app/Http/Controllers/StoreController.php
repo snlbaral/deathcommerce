@@ -3563,12 +3563,15 @@ class StoreController extends Controller
         }
     }
 
-    public function activePlan($user_id, $plan_id)
+    public function activePlan($user_id, $plan_id, $length)
     {
         if (\Auth::user()->type == 'super admin') {
+            if ($length !== "month" && $length !== "year") {
+                return redirect()->back()->with('error', __('Plan fail to upgrade. No plan length provided.'));
+            }
 
             $user = User::find($user_id);
-            $assignPlan = $user->assignPlan($plan_id);
+            $assignPlan = $user->assignPlan($plan_id, $length);
             $plan = Plan::find($plan_id);
             if ($assignPlan['is_success'] == true && !empty($plan)) {
                 $orderID = strtoupper(str_replace('.', '', uniqid('', true)));

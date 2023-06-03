@@ -43,19 +43,24 @@ class Plan extends Model
         ];
     }
 
+    public function getPlanPrice() {
+        $planPrice = PlanPrice::where('plan_id','=',$this->id)->where('country','=','Default')->first();
+        return $planPrice;
+    }
+
     public function defaultMonthlyPrice() {
         $planPrice = PlanPrice::where('plan_id','=',$this->id)->where('country','=','Default')->first();
         if($planPrice) {
             return $planPrice->monthly;
         }
-        return 0;
+        return $this->price;
     }
     public function defaultYearlyPrice() {
         $planPrice = PlanPrice::where('plan_id','=',$this->id)->where('country','=','Default')->first();
         if($planPrice) {
             return $planPrice->yearly;
         }
-        return 0;
+        return $this->price;
     }
 
     public function getPlanStatus() {

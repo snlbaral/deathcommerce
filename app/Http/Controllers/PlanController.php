@@ -153,12 +153,23 @@ class PlanController extends Controller
                     $post['price'] = $request->monthly_price;
                     $plan = Plan::create($post);
                     if ($plan) {
+                        $default_payment_gateways = [];
+                        $default_delivery_methods = [];
+                        // helper.php
+                        foreach (getPaymentGateways() as $gateway) {
+                            $default_payment_gateways[] = $gateway['name'];
+                        }
+                        foreach (getDeliveryMethods() as $delivery) {
+                            $default_delivery_methods[] = $delivery['name'];
+                        }
                         PlanPrice::create([
                             'plan_id'=>$plan->id,
                             'country'=>'Default',
                             'currency'=>'USD',
                             'monthly'=>$request->monthly_price,
                             'yearly'=>$request->yearly_price,
+                            'payment_gateways'=>json_encode($default_payment_gateways),
+                            'delivery_methods'=>json_encode($default_delivery_methods),
                         ]);
                         return redirect()->back()->with('success', __('Plan created Successfully!'));
                     } else {
@@ -203,6 +214,8 @@ class PlanController extends Controller
                     'monthly_price' => 'required|numeric|min:0',
                     'yearly_price' => 'required|numeric|min:0',
                     'currency' => 'required',
+                    'payment_gateways' => 'required',
+                    'delivery_methods' => 'required',
                 ]
             );
             if ($validator->fails()) {
@@ -215,6 +228,8 @@ class PlanController extends Controller
                 'currency'=>$request->currency,
                 'monthly'=>$request->monthly_price,
                 'yearly'=>$request->yearly_price,
+                'payment_gateways'=>json_encode($request->payment_gateways),
+                'delivery_methods'=>json_encode($request->delivery_methods),
             ]);
             return redirect()->back()->with('success', __('Plan Price Added Successfully!'));
         } else {
@@ -369,6 +384,15 @@ class PlanController extends Controller
                         }
                         $post['price'] = $request->monthly_price;
                         if ($plan->update($post)) {
+                            $default_payment_gateways = [];
+                            $default_delivery_methods = [];
+                            // helper.php
+                            foreach (getPaymentGateways() as $gateway) {
+                                $default_payment_gateways[] = $gateway['name'];
+                            }
+                            foreach (getDeliveryMethods() as $delivery) {
+                                $default_delivery_methods[] = $delivery['name'];
+                            }
                             PlanPrice::updateOrCreate([
                                 'plan_id'=>$plan->id,
                                 'country'=>'Default'
@@ -378,6 +402,8 @@ class PlanController extends Controller
                                 'currency'=>'USD',
                                 'monthly'=>$request->monthly_price,
                                 'yearly'=>$request->yearly_price,
+                                'payment_gateways'=>json_encode($default_payment_gateways),
+                                'delivery_methods'=>json_encode($default_delivery_methods),
                             ]);
                             return redirect()->route("plans.index")->with('success', __('Plan updated Successfully!'));
                         } else {

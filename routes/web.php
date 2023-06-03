@@ -9,6 +9,7 @@ use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PageOptionController;
+use App\Http\Controllers\CountrySettingController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaymentWallController;
 use App\Http\Controllers\PermissionController;
@@ -45,7 +46,7 @@ use Illuminate\Http\Request;
 | contains the "web" middleware group. Now create something great!
 |
  */
-Route::get('/', [DashboardController::class, 'index'])->name('dashboard')->middleware(['XSS']);
+Route::get('/{prefix?}', [DashboardController::class, 'index'])->name('dashboard')->middleware(['XSS']);
 
 Route::get('login/{lang?}', function () {
 
@@ -156,7 +157,7 @@ Route::group(['middleware' => ['verified','CheckPlan:plan.expired']], function (
         Route::get('store-customDomain/customDomain', [StoreController::class, 'customDomain'])->name('store.customDomain');
         Route::get('store-subDomain/subDomain', [StoreController::class, 'subDomain'])->name('store.subDomain');
         Route::get('store-plan/{id}/plan', [StoreController::class, 'upgradePlan'])->name('plan.upgrade');
-        Route::get('store-plan-active/{id}/plan/{pid}', [StoreController::class, 'activePlan'])->name('plan.active');
+        Route::get('store-plan-active/{id}/plan/{pid}/{length}', [StoreController::class, 'activePlan'])->name('plan.active');
         Route::DELETE('store-delete/{id}', [StoreController::class, 'storedestroy'])->name('user.destroy');
         Route::DELETE('ownerstore-delete/{id}', [StoreController::class, 'ownerstoredestroy'])->name('ownerstore.destroy');
         Route::get('store-edit/{id}', [StoreController::class, 'storedit'])->name('user.edit');
@@ -181,6 +182,9 @@ Route::group(['middleware' => ['verified','CheckPlan:plan.expired']], function (
     Route::get('storeanalytic', [StoreAnalytic::class, 'index'])->middleware('auth')->name('storeanalytic')->middleware(['XSS']);
 
     Route::middleware(['auth', 'XSS'])->group(function () {
+        Route::post('default-country-setting', [CountrySettingController::class, 'saveDefaultCountrySetting'])->name('country.setting');
+        Route::post('store-custom-country-setting', [CountrySettingController::class, 'store'])->name('country.custom.store');
+        Route::delete('delete-custom-country-setting/{id}', [CountrySettingController::class, 'destroy'])->name('country.custom.delete');
         Route::post('business-setting', [SettingController::class, 'saveBusinessSettings'])->name('business.setting');
         Route::post('company-setting', [SettingController::class, 'saveCompanySettings'])->name('company.setting');
         Route::post('email-setting', [SettingController::class, 'saveEmailSettings'])->name('email.setting');

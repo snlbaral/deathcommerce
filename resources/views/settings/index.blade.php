@@ -1,4 +1,9 @@
 @extends('layouts.admin')
+<style>
+    .select2-container {
+        z-index: 9999;
+    }
+</style>
 @php
     // $logo = asset(Storage::url('uploads/logo/'));
     $logo = \App\Models\Utility::get_file('uploads/logo/');
@@ -65,10 +70,15 @@
                 <a class="nav-link active" id="site_setting_tab" data-bs-toggle="pill" href="#pills-brand-setting"
                     role="tab" aria-controls="pills-brand-setting" aria-selected="true">{{ __('Brand Settings') }}</a>
             </li>
-            <li class="nav-item">
+            {{-- <li class="nav-item">
                 <a class="nav-link" id="pills-payment-setting_tab" data-bs-toggle="pill" href="#pills-payment-setting"
                     role="tab" aria-controls="pills-payment-setting"
                     aria-selected="false">{{ __('Payment Settings') }}</a>
+            </li> --}}
+            <li class="nav-item">
+                <a class="nav-link" id="pills-country-setting_tab" data-bs-toggle="pill" href="#pills-country-setting"
+                    role="tab" aria-controls="pills-country-setting"
+                    aria-selected="false">{{ __('Country Settings') }}</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" id="pills-email-settings_tab" data-bs-toggle="pill" href="#pills-email-settings"
@@ -1504,6 +1514,270 @@
                                         </div>
                                     </div>
                                 </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="pills-country-setting" role="tabpanel" aria-labelledby="pills-brand_setting-tab">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>{{ 'Country Setting' }}</h5>
+                                <small>{{__('These details will be used to setup new stores using below configuration.')}}</small>
+                            </div>
+                            <div class="card-body">
+                                <div class="accordion accordion-flush" id="countrySettingAccordion">
+                                    <div class="accordion-item card">
+                                        <h2 class="accordion-header" id="defaultSetting">
+                                            <button
+                                                class="accordion-button"
+                                                type="button"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="#default_setting"
+                                                aria-expanded="true"
+                                                aria-controls="default_setting"
+                                            >
+                                                <span class="d-flex align-items-center">
+                                                <i class="ti ti-info-circle text-primary"></i> Default Setting
+                                                </span>
+                                            </button>
+                                        </h2>
+                                        <div
+                                        id="default_setting"
+                                        class="accordion-collapse collapse show"
+                                        aria-labelledby="defaultSetting"
+                                        data-bs-parent="#countrySettingAccordion"
+                                        >
+                                            <div class="accordion-body">
+                                                {{ Form::open(['route' => ['country.setting'], 'method' => 'post']) }}
+                                                    @csrf
+                                                    <div class="row">
+                                                        <div class="col-12">
+                                                            <div class="row">
+                                                                <div class="col-lg-6 col-md-6 col-sm-6 form-group">
+                                                                    <label class="col-form-label">{{ __('Stripe Currency') }}</label>
+                                                                    <input type="text" name="stripe_currency" class="form-control"
+                                                                        id="stripe_currency" value="{{env('stripe_currency')}}"
+                                                                        required>
+                                                                    <small class="text-xs">
+                                                                        {{ __('Note: Add currency code as per three-letter ISO code') }}.
+                                                                        <a href="https://stripe.com/docs/currencies"
+                                                                            target="_blank">{{ __('You can find out how to do that here..') }}</a>
+                                                                            {{__(' and this value will be automatically assigned whenever a new store is created.')}}
+                                                                    </small>
+                                                                </div>
+                                                                <div class="col-lg-6 col-md-6 col-sm-6 form-group">
+                                                                    <label for="store_currency"
+                                                                        class="col-form-label">{{ __('Store Currency') }}</label>
+                                                                    <input type="text" name="store_currency" class="form-control"
+                                                                        id="store_currency" value="{{env('store_currency')}}"
+                                                                        required>
+                                                                </div>
+                                                                <div class="col-lg-6 col-md-6 col-sm-6 form-group">
+                                                                    {{ Form::label('system_language', __("Store's Language"), ['class' => 'form-label']) }}
+                                                                    <div class="changeLanguage">
+                                                                        <select name="store_language"
+                                                                            class="form-control" data-toggle="select" required>
+                                                                            @foreach (\App\Models\Utility::languages() as $language)
+                                                                                <option @if (env("store_language") == $language) selected @endif
+                                                                                    value="{{ $language }}">
+                                                                                    {{ Str::upper($language) }}</option>
+                                                                            @endforeach
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-6 col-md-6 col-sm-6 form-group">
+                                                                    {{ Form::label('system_language', __('System Language'), ['class' => 'form-label']) }}
+                                                                    <div class="changeLanguage">
+                                                                        <select name="system_language"
+                                                                            class="form-control" data-toggle="select" required>
+                                                                            @foreach (\App\Models\Utility::languages() as $language)
+                                                                                <option @if (env("system_language") == $language) selected @endif
+                                                                                    value="{{ $language }}">
+                                                                                    {{ Str::upper($language) }}</option>
+                                                                            @endforeach
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-footer">
+                                                        <div class="col-sm-12 px-2">
+                                                            <div class="text-end">
+                                                                {{ Form::submit(__('Save Changes'), ['class' => 'btn btn-xs btn-primary']) }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                {!! Form::close() !!}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="accordion-item card">
+                                        <h2 class="accordion-header" id="customSetting">
+                                        <button
+                                            class="accordion-button collapsed"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#custom_setting"
+                                            aria-expanded="false"
+                                            aria-controls="custom_setting"
+                                        >
+                                            <span class="d-flex align-items-center">
+                                            <i class="ti ti-info-circle text-primary"></i> Custom Setting
+                                            </span>
+                                        </button>
+                                        </h2>
+                                        <div
+                                        id="custom_setting"
+                                        class="accordion-collapse collapse"
+                                        aria-labelledby="customSetting"
+                                        data-bs-parent="#countrySettingAccordion"
+                                        >
+                                            <div class="accordion-body">
+                                                @can('Manage Settings')
+                                                    <!-- Button to trigger the modal -->
+                                                    <a class="btn btn-sm btn-icon btn-primary me-2 text-white float-end" data-bs-toggle="modal" data-bs-target="#addCustomCountrySetting" data-bs-title="{{ __('Add Custom Setting') }}" data-bs-tooltip="tooltip" data-bs-placement="top" title="{{ __('Add Custom Setting') }}">
+                                                        <i data-feather="plus"></i>
+                                                    </a>
+                                                    <!-- Modal -->
+                                                    <div class="modal fade" id="addCustomCountrySetting" tabindex="-1" role="dialog" aria-labelledby="addCustomCountrySettingLabel" aria-hidden="true">
+                                                        <div class="modal-dialog" role="document">
+                                                            <div class="modal-content">
+                                                                {{ Form::open(['route' => ['country.custom.store'], 'method' => 'post', 'enctype' => 'multipart/form-data']) }}
+                                                                @csrf
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title" id="addCustomCountrySettingLabel">{{ __('Add Custom Country Setting') }}</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <div class="row">
+                                                                        <div class="col-12">
+                                                                            <div class="row">
+                                                                                <div class="col-lg-12 col-md-12 col-sm-12 form-group">
+                                                                                    {{ Form::label('country', __("Country"), ['class' => 'form-label']) }}
+                                                                                    <div class="changeLanguage">
+                                                                                        <select name="country"
+                                                                                            class="form-control" data-toggle="select" required>
+                                                                                            @foreach (getCountriesList() as $country)
+                                                                                                <option
+                                                                                                    value="{{ $country['country'] }}">
+                                                                                                    {{ Str::upper($country['country']) }}</option>
+                                                                                            @endforeach
+                                                                                        </select>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="col-lg-6 col-md-6 col-sm-6 form-group">
+                                                                                    <label class="col-form-label">{{ __('Stripe Currency') }}</label>
+                                                                                    <input type="text" name="stripe_currency" class="form-control"
+                                                                                        id="stripe_currency"
+                                                                                        required>
+                                                                                    <small class="text-xs">
+                                                                                        {{ __('Note: Add currency code as per three-letter ISO code') }}.
+                                                                                        <a href="https://stripe.com/docs/currencies"
+                                                                                            target="_blank">{{ __('You can find out how to do that here..') }}</a>
+                                                                                            {{__(' and this value will be automatically assigned whenever a new store is created.')}}
+                                                                                    </small>
+                                                                                </div>
+                                                                                <div class="col-lg-6 col-md-6 col-sm-6 form-group">
+                                                                                    <label for="store_currency"
+                                                                                        class="col-form-label">{{ __('Store Currency') }}</label>
+                                                                                    <input type="text" name="store_currency" class="form-control"
+                                                                                        id="store_currency" 
+                                                                                        required>
+                                                                                </div>
+                                                                                
+                                                                                <div class="col-lg-6 col-md-6 col-sm-6 form-group">
+                                                                                    {{ Form::label('system_language', __("Store's Language"), ['class' => 'form-label']) }}
+                                                                                    <div class="changeLanguage">
+                                                                                        <select name="store_language"
+                                                                                            class="form-control" data-toggle="select" required>
+                                                                                            @foreach (\App\Models\Utility::languages() as $language)
+                                                                                                <option
+                                                                                                    value="{{ $language }}">
+                                                                                                    {{ Str::upper($language) }}</option>
+                                                                                            @endforeach
+                                                                                        </select>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="col-lg-6 col-md-6 col-sm-6 form-group">
+                                                                                    {{ Form::label('system_language', __('System Language'), ['class' => 'form-label']) }}
+                                                                                    <div class="changeLanguage">
+                                                                                        <select name="system_language"
+                                                                                            class="form-control" data-toggle="select" required>
+                                                                                            @foreach (\App\Models\Utility::languages() as $language)
+                                                                                                <option
+                                                                                                    value="{{ $language }}">
+                                                                                                    {{ Str::upper($language) }}</option>
+                                                                                            @endforeach
+                                                                                        </select>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <div class="form-group col-12 d-flex justify-content-end col-form-label">
+                                                                        <input type="button" value="{{ __('Cancel') }}" class="btn btn-secondary btn-light" data-bs-dismiss="modal">
+                                                                        <input type="submit" value="{{ __('Save') }}" class="btn btn-primary ms-2">
+                                                                    </div>
+                                                                </div>
+                                                                {{ Form::close() }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endcan
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <div class="card">
+                                                            <div class="card-body table-border-style">
+                                                                <h5></h5>
+                                                                <div class="table-responsive">
+                                                                    <table class="table mb-0 dataTable ">
+                                                                        <thead>
+                                                                        <tr>
+                                                                            <th> {{ __('Country') }}</th>
+                                                                            <th>{{ __('Stripe Billing Currency') }}</th>
+                                                                            <th>{{ __("Store's Currency") }}</th>
+                                                                            <th> {{ __('System Language') }}</th>
+                                                                            <th> {{ __('Store Language') }}</th>
+                                                                            <th> {{ __('Action') }}</th>
+                                                                        </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            @foreach ($countrySettings as $country)
+                                                                                <tr>
+                                                                                    <td>{{$country['name']}}</td>
+                                                                                    <td>{{$country['stripe_currency']}}</td>
+                                                                                    <td>{{$country['store_currency']}}</td>
+                                                                                    <td>{{$country['system_language']}}</td>
+                                                                                    <td>{{$country['store_language']}}</td>
+                                                                                    <td>
+                                                                                        <a class="bs-pass-para btn btn-sm btn-icon bg-light-secondary" href="#"
+                                                                                            data-title="{{ __('Delete Lead') }}"
+                                                                                            data-confirm="{{ __('Are You Sure?') }}"
+                                                                                            data-text="{{ __('This action can not be undone. Do you want to continue?') }}"
+                                                                                            data-confirm-yes="delete-form-{{ $country->id }}"
+                                                                                            data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                                            title="{{ __('Delete') }}">
+                                                                                            <i class="ti ti-trash f-20"></i>
+                                                                                        </a>
+                                                                                        {!! Form::open(['method' => 'DELETE', 'route' => ['country.custom.delete', $country->id], 'id' => 'delete-form-' . $country->id]) !!}
+                                                                                        {!! Form::close() !!}
+                                                                                    </td>
+                                                                                </tr>
+                                                                            @endforeach
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

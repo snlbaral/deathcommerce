@@ -33,7 +33,9 @@
                                 <th scope="col">{{ __('Name') }}</th>
                                 <th scope="col">{{ __('Price') }}</th>
                                 <th scope="col">{{ __('quantity') }}</th>
+                                @if(!empty($product['tax'])) 
                                 <th scope="col">{{ __('Tax') }}</th> 
+                                @endif
                                 <th scope="col">{{ __('Total') }}</th>
                             </tr>
                             </thead>
@@ -72,11 +74,11 @@
                                                         </button>
                                                     </div>
                                                 </td>
+                                                @php
+                                                    $total_tax=0;
+                                                @endphp
+                                                @if(!empty($product['tax']))
                                                 <td data-label="Tax"> 
-                                                    @php
-                                                        $total_tax=0;
-                                                    @endphp
-                                                    @if(!empty($product['tax']))
                                                     @foreach($product['tax'] as $tax)
                                                         @php
                                                             $sub_tax = ($product['variant_price']* $product['quantity'] * $tax['tax']) / 100;
@@ -86,10 +88,8 @@
                                                             {{$tax['tax_name'].' '.$tax['tax'].'%'.' ('.$sub_tax.')'}}
                                                         </p>
                                                     @endforeach
-                                                    @else
-                                                        -
-                                                    @endif
                                                 </td> 
+                                                @endif
                                                 <td data-label="Total">
                                                     @php
                                                         $totalprice = $product['variant_price'] * $product['quantity'] + $total_tax;
@@ -131,11 +131,11 @@
                                                     </button>
                                                 </div>
                                             </td>
+                                            @php
+                                                $total_tax=0;
+                                            @endphp
+                                            @if(!empty($product['tax']))
                                             <td data-label="Tax"> 
-                                                @php
-                                                    $total_tax=0;
-                                                @endphp
-                                                @if(!empty($product['tax']))
                                                 @foreach($product['tax'] as $tax)
                                                     @php
                                                     
@@ -146,10 +146,9 @@
                                                         {{$tax['tax_name'].' '.$tax['tax'].'%'.' ('.$sub_tax.')'}}
                                                     </p>
                                                 @endforeach
-                                                @else
-                                                    -
-                                                @endif
                                             </td> 
+                                            
+                                            @endif
                                             <td data-label="Total">
                                                 @php
                                                     $totalprice = $product['price'] * $product['quantity'] + $total_tax;

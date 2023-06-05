@@ -124,6 +124,12 @@ Route::group(['middleware' => ['verified','CheckPlan:plan.expired']], function (
     // Route::resource('custom-page', PageOptionController::class);
 
     Route::resource('shipping', ShippingController::class)->middleware(['auth', 'XSS']);
+    Route::get("shipping/{slug}/create", [ShippingController::class, 'createNewDelivery'])->name('shipping.new-delivery')->middleware(['auth', 'XSS']);
+    Route::get("shipping/{slug}/edit/{id}", [ShippingController::class, 'editDelivery'])->name('shipping.edit-delivery')->middleware(['auth', 'XSS']);
+    Route::post("shipping/{slug}/store", [ShippingController::class, 'saveNewDelivery'])->name('shipping.new-delivery.store')->middleware(['auth', 'XSS']);
+    Route::delete("shipping/delete/{id}", [ShippingController::class, 'deleteDelivery'])->name('shipping.delete-delivery')->middleware(['auth', 'XSS']);
+    Route::post("shipping/update/status/{id}", [ShippingController::class, 'updateDeliveryMethodStatus'])->name('shipping.update-delivery-status')->middleware(['auth', 'XSS']);
+    
     // Route::resource('blog', BlogController::class)->middleware(['auth']);
 
     Route::get('/customer', [StoreController::class, 'customerindex'])->name('customer.index')->middleware(['auth', 'XSS']);

@@ -21,6 +21,7 @@
     if (Auth::user()->type !== 'super admin') {
         $store_lang = $store_settings->lang;
     }
+    $countries = getCountriesList();
     
     // storage setting
     $file_type = config('files_types');
@@ -1555,7 +1556,7 @@
                                                                 <div class="col-lg-6 col-md-6 col-sm-6 form-group">
                                                                     <label class="col-form-label">{{ __('Stripe Currency') }}</label>
                                                                     <input type="text" name="stripe_currency" class="form-control"
-                                                                        id="stripe_currency" value="{{env('stripe_currency')}}"
+                                                                        id="stripe_currency" value="{{env('STRIPE_CURRENCY')}}"
                                                                         required>
                                                                     <small class="text-xs">
                                                                         {{ __('Note: Add currency code as per three-letter ISO code') }}.
@@ -1568,7 +1569,7 @@
                                                                     <label for="store_currency"
                                                                         class="col-form-label">{{ __('Store Currency') }}</label>
                                                                     <input type="text" name="store_currency" class="form-control"
-                                                                        id="store_currency" value="{{env('store_currency')}}"
+                                                                        id="store_currency" value="{{env('STORE_CURRENCY')}}"
                                                                         required>
                                                                 </div>
                                                                 <div class="col-lg-6 col-md-6 col-sm-6 form-group">
@@ -1577,7 +1578,7 @@
                                                                         <select name="store_language"
                                                                             class="form-control" data-toggle="select" required>
                                                                             @foreach (\App\Models\Utility::languages() as $language)
-                                                                                <option @if (env("store_language") == $language) selected @endif
+                                                                                <option @if (env("STORE_LANGUAGE") == $language) selected @endif
                                                                                     value="{{ $language }}">
                                                                                     {{ Str::upper($language) }}</option>
                                                                             @endforeach
@@ -1590,7 +1591,7 @@
                                                                         <select name="system_language"
                                                                             class="form-control" data-toggle="select" required>
                                                                             @foreach (\App\Models\Utility::languages() as $language)
-                                                                                <option @if (env("system_language") == $language) selected @endif
+                                                                                <option @if (env("SYSTEM_LANGUAGE") == $language) selected @endif
                                                                                     value="{{ $language }}">
                                                                                     {{ Str::upper($language) }}</option>
                                                                             @endforeach
@@ -2820,6 +2821,47 @@
                                                     @enderror
                                                 </div>
                                                 <div class="form-group col-md-4">
+                                                    {{ Form::label('country', __('Country'), ['class' => 'form-label']) }}
+                                                    <select class="form-control country_select" name="country">
+                                                        @foreach ($countries as $country)
+                                                            <option data-id="{{$country['id']}}" value="{{$country['country']}}" @if(strtolower($country['country'])==strtolower($store_settings->country)) selected @endif>{{$country['country']}}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('country')
+                                                        <span class="invalid-country" role="alert">
+                                                            <strong class="text-danger">{{ $message }}</strong>
+                                                        </span>
+                                                    @enderror
+                                                </div>
+                                                <div class="form-group col-md-4">
+                                                    {{ Form::label('state', __('State'), ['class' => 'form-label']) }}
+                                                    <select class="form-control state_select" name="state"></select>
+                                                    @error('state')
+                                                        <span class="invalid-state" role="alert">
+                                                            <strong class="text-danger">{{ $message }}</strong>
+                                                        </span>
+                                                    @enderror
+                                                </div>
+                                                <div class="form-group col-md-4">
+                                                    {{ Form::label('city', __('City'), ['class' => 'form-label']) }}
+                                                    <select class="form-control city_select" name="city"></select>
+                                                    @error('city')
+                                                        <span class="invalid-city" role="alert">
+                                                            <strong class="text-danger">{{ $message }}</strong>
+                                                        </span>
+                                                    @enderror
+                                                </div>
+                                                
+                                                <div class="form-group col-md-4">
+                                                    {{ Form::label('zipcode', __('Zipcode'), ['class' => 'form-label']) }}
+                                                    {{ Form::text('zipcode', null, ['class' => 'form-control', 'placeholder' => __('Zipcode')]) }}
+                                                    @error('zipcode')
+                                                    <span class="invalid-zipcode" role="alert">
+                                                        <strong class="text-danger">{{ $message }}</strong>
+                                                    </span>
+                                                    @enderror
+                                                </div>
+                                                <div class="form-group col-md-4">
                                                     {{ Form::label('address', __('Address'), ['class' => 'form-label']) }}
                                                     {{ Form::text('address', null, ['class' => 'form-control', 'placeholder' => __('Address')]) }}
                                                     @error('address')
@@ -2828,42 +2870,7 @@
                                                         </span>
                                                     @enderror
                                                 </div>
-                                                <div class="form-group col-md-4">
-                                                    {{ Form::label('city', __('City'), ['class' => 'form-label']) }}
-                                                    {{ Form::text('city', null, ['class' => 'form-control', 'placeholder' => __('City')]) }}
-                                                    @error('city')
-                                                        <span class="invalid-city" role="alert">
-                                                            <strong class="text-danger">{{ $message }}</strong>
-                                                        </span>
-                                                    @enderror
-                                                </div>
-                                                <div class="form-group col-md-4">
-                                                    {{ Form::label('state', __('State'), ['class' => 'form-label']) }}
-                                                    {{ Form::text('state', null, ['class' => 'form-control', 'placeholder' => __('State')]) }}
-                                                    @error('state')
-                                                        <span class="invalid-state" role="alert">
-                                                            <strong class="text-danger">{{ $message }}</strong>
-                                                        </span>
-                                                    @enderror
-                                                </div>
-                                                <div class="form-group col-md-4">
-                                                    {{ Form::label('zipcode', __('Zipcode'), ['class' => 'form-label']) }}
-                                                    {{ Form::text('zipcode', null, ['class' => 'form-control', 'placeholder' => __('Zipcode')]) }}
-                                                    @error('zipcode')
-                                                        <span class="invalid-zipcode" role="alert">
-                                                            <strong class="text-danger">{{ $message }}</strong>
-                                                        </span>
-                                                    @enderror
-                                                </div>
-                                                <div class="form-group col-md-4">
-                                                    {{ Form::label('country', __('Country'), ['class' => 'form-label']) }}
-                                                    {{ Form::text('country', null, ['class' => 'form-control', 'placeholder' => __('Country')]) }}
-                                                    @error('country')
-                                                        <span class="invalid-country" role="alert">
-                                                            <strong class="text-danger">{{ $message }}</strong>
-                                                        </span>
-                                                    @enderror
-                                                </div>
+                                                
                                                 <div class="form-group col-md-4">
                                                     {{ Form::label('store_default_language', __('Store Default Language'), ['class' => 'form-label']) }}
                                                     <div class="changeLanguage">
@@ -4808,6 +4815,137 @@
         }
 
         $(document).ready(function() {
+
+            const countires = {!! json_encode($countries) !!};
+            const store_country = "{{$store_settings->country}}"
+            const store_state = "{{$store_settings->state}}"
+            const store_city = "{{$store_settings->city}}"
+
+            function getStates(countryId) {
+                $.ajax({
+                    url: "/api/states/"+countryId,
+                    success: function ({status, data}) {
+                        if(status) {
+                            var newOption = new Option("Select State", "", false, false);
+                            $('.state_select').append(newOption).trigger('change');
+                            var state_ids = []
+                            data.forEach(state => {
+                                var isSelected = store_state && store_state==state.name ? true : false
+                                if(isSelected) {
+                                    state_ids.push(state.id)
+                                }
+                                var newOption = new Option(state.name, state.name, isSelected, isSelected);
+                                $(newOption).data('id', state.id);
+                                $('.state_select').append(newOption).trigger('change');
+                            });
+                            if(state_ids && state_ids.length) {
+                                getCities(countryId, state_ids)
+                            }
+                        } else {
+                            show_toastr('Error', '{{ __('Some Error Occurred.') }}', 'error')
+                        }
+                    },
+                    error: function (error) {
+                        show_toastr('Error', '{{ __('Some Error Occurred.') }}', 'error')
+                    }
+                });
+            }
+
+            function getCities(countryId, stateIds) {
+                $.ajax({
+                    url: "/api/cities/"+countryId,
+                    method: "POST",
+                    data: { 
+                        state_ids:stateIds
+                    },
+                    success: function ({status, data}) {
+                        if(status) {
+                            var newOption = new Option("Select City", "", false, false);
+                            $('.city_select').append(newOption).trigger('change');
+                            if(store_city) {
+                                var fromTheList = data.find(city=>city.name==store_city)
+                                if(!fromTheList) {
+                                    var newOption = new Option(store_city, store_city, true, true);
+                                    $('.city_select').append(newOption).trigger('change');
+                                }
+                            }
+                            data.forEach(city => {
+                                var isSelected = store_city && store_city==city.name ? true : false
+                                var newOption = new Option(city.name, city.name, isSelected, isSelected);
+                                $('.city_select').append(newOption).trigger('change');
+                            });
+                        } else {
+                            show_toastr('Error', '{{ __('Some Error Occurred.') }}', 'error')
+                        }
+                    },
+                    error: function (error) {
+                        show_toastr('Error', '{{ __('Some Error Occurred.') }}', 'error')
+                    }
+                });
+            }
+
+
+            $(".country_select").on("select2:select", function(){
+                const id = $(this).find(':selected').data('id')
+                $('.state_select').empty().trigger("change");
+                $('.city_select').empty().trigger("change");
+                getStates(id)
+            })
+
+            $('.state_select').on('select2:select', function (e) {
+                // Do something
+                var state_ids = [];
+                // Loop through the selected option elements
+                $(this).find("option:selected").each(function () {
+                    var dataId = $(this).data("id");
+                    state_ids.push(dataId);
+                });
+                const countryId = $(".country_select").find(':selected').data('id')
+                $('.city_select').empty().trigger("change");
+                getCities(countryId, state_ids)
+            });
+
+        
+            function updateCountrySelect(countryCode) {
+                var country = countires.find(c=>c.code===countryCode)
+                if(country) {
+                    getStates(country.id)
+                    $('.country_select').val(country.country);
+                    $('.country_select').trigger('change');
+                    localStorage.setItem('country_code', countryCode)
+                }
+            }
+            
+            if(!store_country) {
+                var country_code = localStorage.getItem("country_code")
+                if(!country_code) {
+                    $.get('https://ipinfo.io', function() {}, "jsonp").always(function(resp) {
+                        var countryCode = (resp && resp.country) ? resp.country : "";
+                        updateCountrySelect(countryCode)
+                    })
+                } else {
+                    updateCountrySelect(country_code)
+                }
+            } else {
+                var country = countires.find(c=>c.country.toLowerCase()===store_country.toLowerCase())
+                getStates(country.id)
+            }
+
+            $(".country_select").select2({
+                search: true,
+                placeholder: "{{__('Enter Your Country')}}"
+            })
+            $(".state_select").select2({
+                search: true,
+                placeholder: "{{__('Enter Your State')}}",
+            })
+            $(".city_select").select2({
+                search: true,
+                placeholder: "{{__('Enter Your City')}}",
+                tags: true,
+            })
+
+
             setTimeout(function(e) {
                 var checked = $("input[type=radio][name='theme_color']:checked");
                 $('#themefile').val(checked.attr('data-theme'));
